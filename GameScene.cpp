@@ -1,4 +1,5 @@
 #include "GameScene.h"
+#include "ImGui.h"
 using namespace KamataEngine;
 
 // GameScene::~GameScene() {
@@ -20,7 +21,7 @@ void GameScene::Initialize() {
 	Audio::GetInstance()->PlayWave(soundDataHandle_);
 	voiceHandle_ = Audio::GetInstance()->PlayWave(soundDataHandle_, true);
 
-	// PrimitiveDrawer::GetInstance()->SetCamera(&camera_);
+	PrimitiveDrawer::GetInstance()->SetViewProjection(&camera_);
 	debugCamera_ = new DebugCamera(1280, 720);
 
 	AxisIndicator::GetInstance()->SetVisible(true);
@@ -29,12 +30,12 @@ void GameScene::Initialize() {
 
 void GameScene::Update() {
 	// ここにインゲームの更新処理を書く
-	/*
+
 	Vector2 pos = sprite_->GetPosition();
 	pos.x += 2.0f;
 	pos.y += 1.0f;
 	sprite_->SetPosition(pos);
-	*/
+
 	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
 
 		Audio::GetInstance()->StopWave(voiceHandle_);
@@ -63,5 +64,5 @@ void GameScene::Draw() {
 	model_->Draw(worldTransform_, debugCamera_->GetCamera(), textureHandle_);
 	Model::PostDraw();
 
-	// PrimitiveDrawer::GetInstance()->DrawLine3D({0, 0, 0}, {0, 10, 0}, {1.0f, 0.0f, 0.0f, 1.0f});
+	PrimitiveDrawer::GetInstance()->DrawLine3d({0, 0, 0}, {0, 10, 0}, {1.0f, 0.0f, 0.0f, 1.0f});
 }
