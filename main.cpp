@@ -11,16 +11,14 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	KamataEngine::Initialize();
 
 	// DirectXCommonインスタンスの取得
-	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
-	ImGuiManager* imguiManager = ImGuiManager::GetInstance();
 
 	GameScene* gameScene = new GameScene();
+	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
+
 	gameScene->Initialize();
 
 #pragma region メインループ
 	while (true) {
-
-		imguiManager->Begin();
 
 		// エンジンの更新
 		if (KamataEngine::Update()) {
@@ -30,15 +28,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 		gameScene->Update();
 
-		imguiManager->End();
 #pragma region 描画
 		dxCommon->PreDraw();
 
 		gameScene->Draw();
-
-		AxisIndicator::GetInstance()->Draw();
-
-		imguiManager->Draw();
 
 		dxCommon->PostDraw();
 #pragma endregion
