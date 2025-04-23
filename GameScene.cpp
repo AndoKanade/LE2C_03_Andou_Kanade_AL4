@@ -3,7 +3,7 @@
 using namespace KamataEngine;
 
 GameScene::~GameScene() {
-	delete model_;
+	//	delete model_;
 	delete blockModel_;
 	for (WorldTransform* worldTransformBlock : worldTransformBlocks_) {
 		delete worldTransformBlock;
@@ -15,7 +15,7 @@ void GameScene::Initialize() {
 	// ここにインゲームの初期化処理を書く
 
 	textureHandle_ = TextureManager::Load("ashe.jpg");
-	model_ = Model::Create();
+	//	model_ = Model::Create();
 	blockModel_ = Model::Create();
 
 	const uint32_t knumBlockHorizontal = 20;
@@ -34,8 +34,8 @@ void GameScene::Initialize() {
 
 	PrimitiveDrawer::GetInstance()->SetViewProjection(&camera_);
 
-	player_ = new Player();
-	player_->Initialize(model_, textureHandle_, &camera_);
+	// player_ = new Player();
+	//	player_->Initialize(model_, textureHandle_, &camera_);
 }
 
 void GameScene::Update() {
@@ -53,6 +53,6 @@ void GameScene::Draw() {
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 
 	Model::PreDraw(dxCommon->GetCommandList());
-	player_->Draw();
+	// player_->Draw();
 	Model::PostDraw();
 }

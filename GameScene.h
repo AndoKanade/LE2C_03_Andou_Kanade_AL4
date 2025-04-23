@@ -16,12 +16,12 @@ public:
 private:
 	uint32_t textureHandle_ = 0;
 
-	KamataEngine::Model* model_ = nullptr;
+	//	KamataEngine::Model* model_ = nullptr;
 	KamataEngine::Model* blockModel_ = nullptr;
 
 	KamataEngine::WorldTransform worldTransform_;
 	std::vector<WorldTransform*> worldTransformBlocks_;
 	KamataEngine::Camera camera_;
 
-	Player* player_ = nullptr;
+	// Player* player_ = nullptr;
 };
