@@ -1,14 +1,20 @@
 #include "GameScene.h"
 #include "ImGui.h"
+
 using namespace KamataEngine;
 
 GameScene::~GameScene() {
 	//	delete model_;
-	delete blockModel_;
-	for (WorldTransform* worldTransformBlock : worldTransformBlocks_) {
-		delete worldTransformBlock;
+	delete modelBlock_;
+	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
+		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
+			delete worldTransformBlock;
+		}
 	}
+
 	worldTransformBlocks_.clear();
+
+	delete debugCamera_;
 }
 
 void GameScene::Initialize() {
@@ -16,23 +22,35 @@ void GameScene::Initialize() {
 
 	textureHandle_ = TextureManager::Load("ashe.jpg");
 	//	model_ = Model::Create();
-	blockModel_ = Model::Create();
+	modelBlock_ = Model::Create();
 
-	const uint32_t knumBlockHorizontal = 20;
+	const uint32_t kNumBlockVirtical = 10;
+	const uint32_t kNumBlockHorizontal = 20;
+
 	const float kBlockWidth = 2.0f;
-	worldTransformBlocks_.resize(knumBlockHorizontal);
+	const float kBlockHeight = 2.0f;
 
-	for (uint32_t i = 0; i < knumBlockHorizontal; i++) {
-		WorldTransform* worldTransformBlocks_[i] = new WorldTransform();
-		worldTransformBlocks_[i]->Initialize();
-		worldTransformBlocks_[i]->translation.x = kBlockWidth * i;
-		worldTransformBlocks_[i]->translation.y = 0.0f;
+	worldTransformBlocks_.resize(kNumBlockVirtical);
+
+	for (uint32_t i = 0; i < kNumBlockVirtical; i++) {
+		worldTransformBlocks_[i].resize(kNumBlockHorizontal);
+	}
+
+	for (uint32_t i = 0; i < kNumBlockVirtical; i++) {
+		for (uint32_t j = 0; j < kNumBlockHorizontal; j++) {
+			worldTransformBlocks_[i][j] = new WorldTransform();
+			worldTransformBlocks_[i][j]->Initialize();
+			worldTransformBlocks_[i][j]->translation_.x = (float)j * kBlockWidth;
+			worldTransformBlocks_[i][j]->translation_.y = (float)i * kBlockHeight;
+		}
 	}
 
 	worldTransform_.Initialize();
-	camera_.Initialize();
 
+	camera_.Initialize();
 	PrimitiveDrawer::GetInstance()->SetViewProjection(&camera_);
+
+	debugCamera_ = new DebugCamera(1280, 720);
 
 	// player_ = new Player();
 	//	player_->Initialize(model_, textureHandle_, &camera_);
@@ -40,12 +58,39 @@ void GameScene::Initialize() {
 
 void GameScene::Update() {
 	// ここにインゲームの更新処理を書く
-	player_->Update();
-	for (WorldTransform* worldTransformBlock : worldTransformBlocks_) {
+	// player_->Update();
 
-		/// 3次元のアフェイン変換行列を作成する
-		worldTransformBlock->matWorld_ = Multiply(Multiply(worldTransformBlock->scale_, worldTransformBlock->translation_), worldTransformBlock->rotation_);
+	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
+		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
+			if (!worldTransformBlock) {
+				continue;
+			}
+
+			/// 3次元のアフェイン変換行列を作成する
+			worldTransformBlock->matWorld_ = MakeAffineMatrix(worldTransformBlock->scale_, worldTransformBlock->rotation_, worldTransformBlock->translation_);
+
+			worldTransformBlock->TransferMatrix();
+		}
 	}
+
+	debugCamera_->Update();
+#ifdef _DEBUG
+
+	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+
+		isDebugCameraActive_ = true;
+	}
+
+	if (isDebugCameraActive_) {
+		debugCamera_->Update();
+		camera_.matView_ = debugCamera_->GetViewMatrix();
+		camera_.matProjection_ = debugCamera_->GetProjectionMatrix();
+		camera_.TransferMatrix();
+	} else {
+		camera_.UpdateMatrix();
+	}
+
+#endif
 }
 
 void GameScene::Draw() {
@@ -54,5 +99,11 @@ void GameScene::Draw() {
 
 	Model::PreDraw(dxCommon->GetCommandList());
 	// player_->Draw();
+	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
+		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
+			modelBlock_->Draw(*worldTransformBlock, camera_);
+		}
+	}
+
 	Model::PostDraw();
 }
