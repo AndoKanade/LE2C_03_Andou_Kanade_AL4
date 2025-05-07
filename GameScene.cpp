@@ -40,7 +40,7 @@ void GameScene::Initialize() {
 		for (uint32_t j = 0; j < kNumBlockHorizontal; j++) {
 			worldTransformBlocks_[i][j] = new WorldTransform();
 			worldTransformBlocks_[i][j]->Initialize();
-			worldTransformBlocks_[i][j]->translation_.x = (float)j * kBlockWidth;
+			worldTransformBlocks_[i][j]->translation_.x = (float)j * (kBlockWidth + 2);
 			worldTransformBlocks_[i][j]->translation_.y = (float)i * kBlockHeight;
 		}
 	}
@@ -78,13 +78,19 @@ void GameScene::Update() {
 
 	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
 
-		isDebugCameraActive_ = true;
+		// isDebugCameraActive_ = true;
+
+		if (!isDebugCameraActive_) {
+			isDebugCameraActive_ = true;
+		} else {
+			isDebugCameraActive_ = false;
+		}
 	}
 
 	if (isDebugCameraActive_) {
 		debugCamera_->Update();
-		camera_.matView_ = debugCamera_->GetViewMatrix();
-		camera_.matProjection_ = debugCamera_->GetProjectionMatrix();
+		camera_.matView = debugCamera_->GetCamera().matView;
+		camera_.matProjection = debugCamera_->GetCamera().matProjection;
 		camera_.TransferMatrix();
 	} else {
 		camera_.UpdateMatrix();
