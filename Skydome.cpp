@@ -1,11 +1,14 @@
 #include "Skydome.h"
 
-void Skydome::Initialize(KamataEngine::Camera* camera, KamataEngine::Model* model) {
+void Skydome::Initialize(Camera* camera, Model* model) {
+
+	assert(model);
+
 	worldTransform_.Initialize();
 	camera_ = camera;
 	model_ = model;
 }
 
-void Skydome::Update() {}
+void Skydome::Update() { worldTransform_.TransferMatrix(); }
 
 void Skydome::Draw() { model_->Draw(worldTransform_, *camera_); }

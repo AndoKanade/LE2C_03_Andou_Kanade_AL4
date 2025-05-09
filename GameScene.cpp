@@ -39,6 +39,10 @@ void GameScene::Initialize() {
 
 	for (uint32_t i = 0; i < kNumBlockVirtical; i++) {
 		for (uint32_t j = 0; j < kNumBlockHorizontal; j++) {
+			if ((i + j) % 2 == 1) {
+				continue;
+			}
+
 			worldTransformBlocks_[i][j] = new WorldTransform();
 			worldTransformBlocks_[i][j]->Initialize();
 			worldTransformBlocks_[i][j]->translation_.x = (float)j * (kBlockWidth + 2);
@@ -52,7 +56,10 @@ void GameScene::Initialize() {
 	PrimitiveDrawer::GetInstance()->SetViewProjection(&camera_);
 
 	debugCamera_ = new DebugCamera(1280, 720);
+
+	skydome_ = new Skydome();
 	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
+	skydome_->Initialize(&camera_, modelSkydome_);
 
 	player_ = new Player();
 	player_->Initialize(model_, textureHandle_, &camera_);
@@ -62,6 +69,7 @@ void GameScene::Update() {
 	// ここにインゲームの更新処理を書く
 	player_->Update();
 	skydome_->Update();
+
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
 			if (!worldTransformBlock) {
@@ -110,6 +118,10 @@ void GameScene::Draw() {
 	skydome_->Draw();
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
+			if (!worldTransformBlock) {
+				continue;
+			}
+
 			modelBlock_->Draw(*worldTransformBlock, camera_);
 		}
 	}

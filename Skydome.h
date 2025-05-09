@@ -4,13 +4,13 @@ using namespace KamataEngine;
 
 class Skydome {
 public:
-	void Initialize(KamataEngine::Camera* camera, KamataEngine::Model* model);
+	void Initialize(Camera* camera,Model* model);
 	void Update();
 	void Draw();
 
 private:
-	KamataEngine::WorldTransform worldTransform_;
+	WorldTransform worldTransform_;
 
-	KamataEngine::Camera* camera_;
-	KamataEngine::Model* model_ = nullptr;
+	Camera* camera_;
+	Model* model_ = nullptr;
 };
