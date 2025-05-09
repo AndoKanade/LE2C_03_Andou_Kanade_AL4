@@ -4,7 +4,7 @@
 using namespace KamataEngine;
 
 GameScene::~GameScene() {
-	//	delete model_;
+	delete model_;
 	delete modelBlock_;
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
@@ -15,13 +15,14 @@ GameScene::~GameScene() {
 	worldTransformBlocks_.clear();
 
 	delete debugCamera_;
+	delete modelSkydome_;
 }
 
 void GameScene::Initialize() {
 	// ここにインゲームの初期化処理を書く
 
 	textureHandle_ = TextureManager::Load("ashe.jpg");
-	//	model_ = Model::Create();
+	model_ = Model::Create();
 	modelBlock_ = Model::Create();
 
 	const uint32_t kNumBlockVirtical = 10;
@@ -51,15 +52,16 @@ void GameScene::Initialize() {
 	PrimitiveDrawer::GetInstance()->SetViewProjection(&camera_);
 
 	debugCamera_ = new DebugCamera(1280, 720);
+	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
 
-	// player_ = new Player();
-	//	player_->Initialize(model_, textureHandle_, &camera_);
+	player_ = new Player();
+	player_->Initialize(model_, textureHandle_, &camera_);
 }
 
 void GameScene::Update() {
 	// ここにインゲームの更新処理を書く
-	// player_->Update();
-
+	player_->Update();
+	skydome_->Update();
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
 			if (!worldTransformBlock) {
@@ -104,7 +106,8 @@ void GameScene::Draw() {
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 
 	Model::PreDraw(dxCommon->GetCommandList());
-	// player_->Draw();
+	player_->Draw();
+	skydome_->Draw();
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
 			modelBlock_->Draw(*worldTransformBlock, camera_);
