@@ -38,9 +38,14 @@ void GameScene::Initialize() {
 
 	for (uint32_t i = 0; i < kNumBlockVirtical; i++) {
 		for (uint32_t j = 0; j < kNumBlockHorizontal; j++) {
+
+			if ((i + j) % 2 == 1) {
+				continue;
+			}
+
 			worldTransformBlocks_[i][j] = new WorldTransform();
 			worldTransformBlocks_[i][j]->Initialize();
-			worldTransformBlocks_[i][j]->translation_.x = (float)j * (kBlockWidth + 2);
+			worldTransformBlocks_[i][j]->translation_.x = (float)j * kBlockWidth;
 			worldTransformBlocks_[i][j]->translation_.y = (float)i * kBlockHeight;
 		}
 	}
@@ -107,6 +112,10 @@ void GameScene::Draw() {
 	// player_->Draw();
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
+			if (!worldTransformBlock) {
+				continue;
+			}
+
 			modelBlock_->Draw(*worldTransformBlock, camera_);
 		}
 	}
