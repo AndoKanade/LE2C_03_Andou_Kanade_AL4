@@ -3,6 +3,9 @@
 
 using namespace KamataEngine;
 
+Vector3& operator+=(Vector3& lhv, const Vector3& rhv);
+Vector3& operator-=(Vector3& lhv, const Vector3& rhv);
+
 Matrix4x4 MakeScaleMatrix(const Vector3& scale);
 
 Matrix4x4 MakeRotateXMatrix(float radian);

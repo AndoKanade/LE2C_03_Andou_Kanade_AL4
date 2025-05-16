@@ -20,6 +20,29 @@ GameScene::~GameScene() {
 	delete mapChipField_;
 }
 
+void GameScene::GenerateBlocks() {
+	const uint32_t NumBlockVirtical = mapChipField_->GetnumBlockVirtivcal();
+	const uint32_t NumBlockHorizontal = mapChipField_->GetnumBlockHorizontal();
+
+	worldTransformBlocks_.resize(NumBlockVirtical);
+
+	for (uint32_t i = 0; i < NumBlockVirtical; i++) {
+		worldTransformBlocks_[i].resize(NumBlockHorizontal);
+	}
+
+	for (uint32_t i = 0; i < NumBlockVirtical; i++) {
+		for (uint32_t j = 0; j < NumBlockHorizontal; j++) {
+			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kBlock) {
+				WorldTransform* worldTransform = new WorldTransform();
+
+				worldTransform->Initialize();
+				worldTransformBlocks_[i][j] = worldTransform;
+				worldTransform->translation_ = mapChipField_->GetMapChipPositionByIndex(j, i);
+			}
+		}
+	}
+}
+
 void GameScene::Initialize() {
 	// ここにインゲームの初期化処理を書く
 
@@ -42,9 +65,11 @@ void GameScene::Initialize() {
 	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
 	skydome_->Initialize(&camera_, modelSkydome_);
 
+	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(0, 0);
+
 	player_ = new Player();
 	playerModel_ = Model::CreateFromOBJ("player", true);
-	player_->Initialize(playerModel_, &camera_);
+	player_->Initialize(playerModel_, &camera_, playerPosition);
 }
 
 void GameScene::Update() {
@@ -110,27 +135,4 @@ void GameScene::Draw() {
 	}
 
 	Model::PostDraw();
-}
-
-void GameScene::GenerateBlocks() {
-	const uint32_t NumBlockVirtical = mapChipField_->GetnumBlockVirtivcal();
-	const uint32_t NumBlockHorizontal = mapChipField_->GetnumBlockHorizontal();
-
-	worldTransformBlocks_.resize(NumBlockVirtical);
-
-	for (uint32_t i = 0; i < NumBlockVirtical; i++) {
-		worldTransformBlocks_[i].resize(NumBlockHorizontal);
-	}
-
-	for (uint32_t i = 0; i < NumBlockVirtical; i++) {
-		for (uint32_t j = 0; j < NumBlockHorizontal; j++) {
-			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kBlock) {
-				WorldTransform* worldTransform = new WorldTransform();
-
-				worldTransform->Initialize();
-				worldTransformBlocks_[i][j] = worldTransform;
-				worldTransform->translation_ = mapChipField_->GetMapChipPositionByIndex(j, i);
-			}
-		}
-	}
 }
