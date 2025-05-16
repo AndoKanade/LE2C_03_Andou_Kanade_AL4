@@ -2,11 +2,9 @@
 
 void Player::Initialize(Model* model, Camera* camera) {
 	assert(model);
-
-	model_ = model;
-
 	worldTransform_.Initialize();
 	camera_ = camera;
+	model_ = model;
 }
 void Player::Update() {
 	// プレイヤーの更新処理を書く
@@ -15,9 +13,4 @@ void Player::Update() {
 
 	worldTransform_.TransferMatrix();
 }
-void Player::Draw() {
-	// プレイヤーの描画処理を書く
-	// モデルの描画
-
-	model_->Draw(worldTransform_, *camera_);
-}
+void Player::Draw() { model_->Draw(worldTransform_, *camera_); }

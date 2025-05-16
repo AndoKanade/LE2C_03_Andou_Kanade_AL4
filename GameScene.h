@@ -1,5 +1,6 @@
 #pragma once
 #include "KamataEngine.h"
+#include "MapChipField.h"
 #include "Math.h"
 #include "Player.h"
 #include "Skydome.h"
@@ -16,7 +17,6 @@ public:
 	void Draw();
 
 private:
-	
 	KamataEngine::Model* model_ = nullptr;
 	KamataEngine::Model* modelBlock_ = nullptr;
 	bool isDebugCameraActive_ = false;
@@ -26,8 +26,11 @@ private:
 	KamataEngine::Camera camera_;
 	DebugCamera* debugCamera_ = nullptr;
 
-	 Player* player_ = nullptr;
+	Player* player_ = nullptr;
 	Skydome* skydome_ = nullptr;
 	Model* modelSkydome_ = nullptr;
 	Model* playerModel_ = nullptr;
+
+	MapChipField* mapChipField_;
+	void GenerateBlocks();
 };
