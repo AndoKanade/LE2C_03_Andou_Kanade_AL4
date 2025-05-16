@@ -16,7 +16,7 @@ public:
 	void Draw();
 
 private:
-	uint32_t textureHandle_ = 0;
+	
 	KamataEngine::Model* model_ = nullptr;
 	KamataEngine::Model* modelBlock_ = nullptr;
 	bool isDebugCameraActive_ = false;
@@ -29,4 +29,5 @@ private:
 	 Player* player_ = nullptr;
 	Skydome* skydome_ = nullptr;
 	Model* modelSkydome_ = nullptr;
+	Model* playerModel_ = nullptr;
 };

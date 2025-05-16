@@ -6,6 +6,7 @@ using namespace KamataEngine;
 GameScene::~GameScene() {
 	delete model_;
 	delete modelBlock_;
+	delete playerModel_;
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
 			delete worldTransformBlock;
@@ -21,9 +22,8 @@ GameScene::~GameScene() {
 void GameScene::Initialize() {
 	// ここにインゲームの初期化処理を書く
 
-	textureHandle_ = TextureManager::Load("ashe.jpg");
 	model_ = Model::Create();
-	modelBlock_ = Model::Create();
+	modelBlock_ = Model::CreateFromOBJ("block", true);
 
 	const uint32_t kNumBlockVirtical = 10;
 	const uint32_t kNumBlockHorizontal = 20;
@@ -52,6 +52,7 @@ void GameScene::Initialize() {
 
 	worldTransform_.Initialize();
 
+	camera_.farZ = 1000.0f; // カメラの遠くの描画距離
 	camera_.Initialize();
 	PrimitiveDrawer::GetInstance()->SetViewProjection(&camera_);
 
@@ -62,13 +63,12 @@ void GameScene::Initialize() {
 	skydome_->Initialize(&camera_, modelSkydome_);
 
 	player_ = new Player();
-	player_->Initialize(model_, textureHandle_, &camera_);
+	playerModel_ = Model::CreateFromOBJ("player", true);
+	player_->Initialize(playerModel_, &camera_);
 }
 
 void GameScene::Update() {
 	// ここにインゲームの更新処理を書く
-	player_->Update();
-	skydome_->Update();
 
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
@@ -107,6 +107,9 @@ void GameScene::Update() {
 	}
 
 #endif
+
+	player_->Update();
+	skydome_->Update();
 }
 
 void GameScene::Draw() {
