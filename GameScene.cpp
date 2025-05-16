@@ -1,16 +1,133 @@
 #include "GameScene.h"
+#include "ImGui.h"
+
 using namespace KamataEngine;
+
+GameScene::~GameScene() {
+	delete model_;
+	delete modelBlock_;
+	delete playerModel_;
+	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
+		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
+			delete worldTransformBlock;
+		}
+	}
+
+	worldTransformBlocks_.clear();
+
+	delete debugCamera_;
+	delete modelSkydome_;
+}
 
 void GameScene::Initialize() {
 	// ここにインゲームの初期化処理を書く
 
+	model_ = Model::Create();
+	modelBlock_ = Model::CreateFromOBJ("block", true);
+
+	const uint32_t kNumBlockVirtical = 10;
+	const uint32_t kNumBlockHorizontal = 20;
+
+	const float kBlockWidth = 2.0f;
+	const float kBlockHeight = 2.0f;
+
+	worldTransformBlocks_.resize(kNumBlockVirtical);
+
+	for (uint32_t i = 0; i < kNumBlockVirtical; i++) {
+		worldTransformBlocks_[i].resize(kNumBlockHorizontal);
+	}
+
+	for (uint32_t i = 0; i < kNumBlockVirtical; i++) {
+		for (uint32_t j = 0; j < kNumBlockHorizontal; j++) {
+			if ((i + j) % 2 == 1) {
+				continue;
+			}
+
+			worldTransformBlocks_[i][j] = new WorldTransform();
+			worldTransformBlocks_[i][j]->Initialize();
+			worldTransformBlocks_[i][j]->translation_.x = (float)j * (kBlockWidth + 2);
+			worldTransformBlocks_[i][j]->translation_.y = (float)i * kBlockHeight;
+		}
+	}
+
+	worldTransform_.Initialize();
+
+	camera_.farZ = 1000.0f; // カメラの遠くの描画距離
+	camera_.Initialize();
+	PrimitiveDrawer::GetInstance()->SetViewProjection(&camera_);
+
+	debugCamera_ = new DebugCamera(1280, 720);
+
+	skydome_ = new Skydome();
+	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
+	skydome_->Initialize(&camera_, modelSkydome_);
+
+	player_ = new Player();
+	playerModel_ = Model::CreateFromOBJ("player", true);
+	player_->Initialize(playerModel_, &camera_);
 }
 
 void GameScene::Update() {
 	// ここにインゲームの更新処理を書く
 
+	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
+		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
+			if (!worldTransformBlock) {
+				continue;
+			}
+
+			/// 3次元のアフェイン変換行列を作成する
+			worldTransformBlock->matWorld_ = MakeAffineMatrix(worldTransformBlock->scale_, worldTransformBlock->rotation_, worldTransformBlock->translation_);
+
+			worldTransformBlock->TransferMatrix();
+		}
+	}
+
+	debugCamera_->Update();
+#ifdef _DEBUG
+
+	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+
+		// isDebugCameraActive_ = true;
+
+		if (!isDebugCameraActive_) {
+			isDebugCameraActive_ = true;
+		} else {
+			isDebugCameraActive_ = false;
+		}
+	}
+
+	if (isDebugCameraActive_) {
+		debugCamera_->Update();
+		camera_.matView = debugCamera_->GetCamera().matView;
+		camera_.matProjection = debugCamera_->GetCamera().matProjection;
+		camera_.TransferMatrix();
+	} else {
+		camera_.UpdateMatrix();
+	}
+
+#endif
+
+	player_->Update();
+	skydome_->Update();
 }
 
 void GameScene::Draw() {
+	// ここにインゲームの描画処理を書く
+	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 
+	Model::PreDraw(dxCommon->GetCommandList());
+	player_->Draw();
+	skydome_->Draw();
+	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
+		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
+			if (!worldTransformBlock) {
+				continue;
+			}
+
+			modelBlock_->Draw(*worldTransformBlock, camera_);
+		}
+	}
+
+	Model::PostDraw();
 }

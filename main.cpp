@@ -11,8 +11,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	KamataEngine::Initialize();
 
 	// DirectXCommonインスタンスの取得
-	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
+
 	GameScene* gameScene = new GameScene();
+	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
+
 	gameScene->Initialize();
 
 #pragma region メインループ
