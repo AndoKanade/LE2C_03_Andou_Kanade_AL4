@@ -17,6 +17,7 @@ GameScene::~GameScene() {
 
 	delete debugCamera_;
 	delete modelSkydome_;
+	delete mapChipField_;
 }
 
 void GameScene::Initialize() {
@@ -25,32 +26,11 @@ void GameScene::Initialize() {
 	model_ = Model::Create();
 	modelBlock_ = Model::CreateFromOBJ("block", true);
 
-	const uint32_t kNumBlockVirtical = 10;
-	const uint32_t kNumBlockHorizontal = 20;
+	mapChipField_ = new MapChipField;
+	mapChipField_->LoadMapChipCsv("Resources/MapChip.csv");
+	GenerateBlocks();
 
-	const float kBlockWidth = 2.0f;
-	const float kBlockHeight = 2.0f;
-
-	worldTransformBlocks_.resize(kNumBlockVirtical);
-
-	for (uint32_t i = 0; i < kNumBlockVirtical; i++) {
-		worldTransformBlocks_[i].resize(kNumBlockHorizontal);
-	}
-
-	for (uint32_t i = 0; i < kNumBlockVirtical; i++) {
-		for (uint32_t j = 0; j < kNumBlockHorizontal; j++) {
-			if ((i + j) % 2 == 1) {
-				continue;
-			}
-
-			worldTransformBlocks_[i][j] = new WorldTransform();
-			worldTransformBlocks_[i][j]->Initialize();
-			worldTransformBlocks_[i][j]->translation_.x = (float)j * (kBlockWidth + 2);
-			worldTransformBlocks_[i][j]->translation_.y = (float)i * kBlockHeight;
-		}
-	}
-
-	worldTransform_.Initialize();
+	// worldTransform_.Initialize();
 
 	camera_.farZ = 1000.0f; // カメラの遠くの描画距離
 	camera_.Initialize();
@@ -69,6 +49,9 @@ void GameScene::Initialize() {
 
 void GameScene::Update() {
 	// ここにインゲームの更新処理を書く
+
+	player_->Update();
+	skydome_->Update();
 
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
@@ -107,9 +90,6 @@ void GameScene::Update() {
 	}
 
 #endif
-
-	player_->Update();
-	skydome_->Update();
 }
 
 void GameScene::Draw() {
@@ -130,4 +110,27 @@ void GameScene::Draw() {
 	}
 
 	Model::PostDraw();
+}
+
+void GameScene::GenerateBlocks() {
+	const uint32_t NumBlockVirtical = mapChipField_->GetnumBlockVirtivcal();
+	const uint32_t NumBlockHorizontal = mapChipField_->GetnumBlockHorizontal();
+
+	worldTransformBlocks_.resize(NumBlockVirtical);
+
+	for (uint32_t i = 0; i < NumBlockVirtical; i++) {
+		worldTransformBlocks_[i].resize(NumBlockHorizontal);
+	}
+
+	for (uint32_t i = 0; i < NumBlockVirtical; i++) {
+		for (uint32_t j = 0; j < NumBlockHorizontal; j++) {
+			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kBlock) {
+				WorldTransform* worldTransform = new WorldTransform();
+
+				worldTransform->Initialize();
+				worldTransformBlocks_[i][j] = worldTransform;
+				worldTransform->translation_ = mapChipField_->GetMapChipPositionByIndex(j, i);
+			}
+		}
+	}
 }

@@ -12,6 +12,5 @@ public:
 private:
 	WorldTransform worldTransform_;
 	Model* model_ = nullptr;
-
-	Camera* camera_ = nullptr;
+	Camera* camera_;
 };
