@@ -1,5 +1,18 @@
 #include "Math.h"
 
+Vector3& operator+=(Vector3& lhv, const Vector3& rhv) {
+	lhv.x += rhv.x;
+	lhv.y += rhv.y;
+	lhv.z += rhv.z;
+	return lhv;
+}
+Vector3& operator-=(Vector3& lhv, const Vector3& rhv) {
+	lhv.x -= rhv.x;
+	lhv.y -= rhv.y;
+	lhv.z -= rhv.z;
+	return lhv;
+}
+
 Matrix4x4 MakeScaleMatrix(const Vector3& scale) {
 	Matrix4x4 matrix = {}; // すべて0で初期化
 	// スケール行列の設定
