@@ -49,6 +49,7 @@ void Player::Update() {
 
 			float destinationRotationYTable[] = {std::numbers::pi_v<float> / 2.0f, std::numbers::pi_v<float> * 3.0f / 2.0f};
 			float destinationRotationY = destinationRotationYTable[static_cast<uint32_t>(lrDirection_)];
+			worldTransform_.rotation_.y = EaseInOutLerp(turnFirstRotationY_, destinationRotationY, turnTimer_ / lTimeTurn);
 		}
 	}
 

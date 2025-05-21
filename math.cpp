@@ -110,3 +110,13 @@ Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Ve
 
 	return affineMatrix;
 }
+
+// 線形補間
+float Lerp(float a, float b, float t) { return a + (b - a) * t; }
+
+// easeInOut 関数（S字カーブ）
+// 0.0 <= t <= 1.0 の範囲で使用
+float EaseInOut(float t) { return t * t * (3.0f - 2.0f * t); }
+
+// easeInOut を使った補間
+float EaseInOutLerp(float a, float b, float t) { return Lerp(a, b, EaseInOut(t)); }
