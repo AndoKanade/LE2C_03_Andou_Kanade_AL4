@@ -111,12 +111,23 @@ Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Ve
 	return affineMatrix;
 }
 
-// 線形補間
 float Lerp(float a, float b, float t) { return a + (b - a) * t; }
 
-float EaseInOut(float t) {
-	return t * t * t * (t * (t * 6 - 15) + 10); // smootherstep: 0〜1
+float EaseInOut(float x1, float x2, float t) {
+	float easedT = -(std::cosf(std::numbers::pi_v<float> * t) - 1.0f / 2.0f);
+	return Lerp(x1, x2, easedT);
 }
 
-// easeInOut を使った補間
-float EaseInOutLerp(float a, float b, float t) { return Lerp(a, b, EaseInOut(t)); }
+float NormalizeAngle(float angle) {
+	while (angle > std::numbers::pi_v<float>)
+		angle -= std::numbers::pi_v<float> * 2.0f;
+	while (angle < -std::numbers::pi_v<float>)
+		angle += std::numbers::pi_v<float> * 2.0f;
+	return angle;
+}
+
+float EaseInOutAngle(float from, float to, float t) {
+	float delta = NormalizeAngle(to - from);
+	float easedT = -(std::cosf(std::numbers::pi_v<float> * t) - 1.0f) / 2.0f;
+	return from + delta * easedT;
+}

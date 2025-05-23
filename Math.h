@@ -1,5 +1,6 @@
 #pragma once
 #include "KamataEngine.h"
+#include <numbers>
 
 using namespace KamataEngine;
 
@@ -25,7 +26,6 @@ float Lerp(float a, float b, float t);
 
 // easeInOut 関数（S字カーブ）
 // 0.0 <= t <= 1.0 の範囲で使用
-float EaseInOut(float t);
-
-// easeInOut を使った補間
-float EaseInOutLerp(float a, float b, float t);
+float EaseInOut(float x1, float x2, float t);
+float NormalizeAngle(float angle);
+float EaseInOutAngle(float from, float to, float t);

@@ -65,7 +65,7 @@ void GameScene::Initialize() {
 	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
 	skydome_->Initialize(&camera_, modelSkydome_);
 
-	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(0, 0);
+	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(1, 18);
 
 	player_ = new Player();
 	playerModel_ = Model::CreateFromOBJ("player", true);
