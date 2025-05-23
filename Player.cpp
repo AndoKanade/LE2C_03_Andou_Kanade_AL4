@@ -1,61 +1,133 @@
+#define NOMINMAX
+
 #include "Player.h"
+#include "Math.h"
+#include <algorithm>
+#include <cassert>
+#include <numbers>
 
 void Player::Initialize(Model* model, Camera* camera, const Vector3& position) {
+
 	assert(model);
+	// モデル
+	model_ = model;
+
 	worldTransform_.Initialize();
 	worldTransform_.translation_ = position;
 	worldTransform_.rotation_.y = std::numbers::pi_v<float> / 2.0f;
+
 	camera_ = camera;
-	model_ = model;
 }
-void Player::Update() {
 
-	if (Input::GetInstance()->PushKey(DIK_RIGHT) || Input::GetInstance()->PushKey(DIK_LEFT)) {
-		Vector3 acceleration = {};
+void Player ::Update() {
 
-		if (Input::GetInstance()->PushKey(DIK_RIGHT)) {
-			if (lrDirection_ != LRDirection::kLeft) {
-				lrDirection_ = LRDirection::kLeft;
-				turnFirstRotationY_ = worldTransform_.rotation_.y;
-				turnTimer_ = 0.0f;
+	// 移動入力
+	if (onGround_) {
+		if (Input::GetInstance()->PushKey(DIK_RIGHT) || Input::GetInstance()->PushKey(DIK_LEFT)) {
+
+			// 左右加速
+			Vector3 acceleration = {};
+			if (Input::GetInstance()->PushKey(DIK_RIGHT)) {
+
+				// 左移動中の右入力
+				if (velocity_.x < 0.0f) {
+					// 速度と逆方向に入力中は急ブレーキ
+					velocity_.x *= (1.0f - kAttenuation);
+				}
+
+				acceleration.x += kAcceleration;
+
+				if (lrDirection_ != LRDirection::kLeft) {
+					lrDirection_ = LRDirection::kLeft;
+					turnFirstRotationY_ = worldTransform_.rotation_.y;
+					turnTimer_ = kTimeTurn;
+				}
+			} else if (Input::GetInstance()->PushKey(DIK_LEFT)) {
+				// 右移動中の左入力
+				if (velocity_.x > 0.0f) {
+					// 速度と逆方向に入力中は急ブレーキ
+					velocity_.x *= (1.0f - kAttenuation);
+				}
+
+				acceleration.x -= kAcceleration;
+
+				if (lrDirection_ != LRDirection::kRight) {
+					lrDirection_ = LRDirection::kRight;
+					turnFirstRotationY_ = worldTransform_.rotation_.y;
+					turnTimer_ = kTimeTurn;
+				}
 			}
 
-			if (velocity_.x < 0.0f) {
-				velocity_.x *= (1.0f - kAttenuation);
-			}
+			// 加速/減速
+			velocity_ += acceleration;
+			// 最大速度制限
+			velocity_.x = std::clamp(velocity_.x, -kLimitRunSpeed, kLimitRunSpeed);
 
-			acceleration.x += kAcceleration;
-		} else if (Input::GetInstance()->PushKey(DIK_LEFT)) {
-			if (lrDirection_ != LRDirection::kRight) {
-				lrDirection_ = LRDirection::kRight;
-				turnFirstRotationY_ = worldTransform_.rotation_.y;
-				turnTimer_ = 0.0f;
-			}
-
-			if (velocity_.x > 0.0f) {
-				velocity_.x *= (1.0f - kAttenuation);
-			}
-
-			acceleration.x -= kAcceleration;
 		} else {
+			// 非入力時は移動減衰をかける
 			velocity_.x *= (1.0f - kAttenuation);
 		}
 
-		velocity_ += acceleration;
-		velocity_.x = std::clamp(velocity_.x, -kLimitRunSpeed, kLimitRunSpeed);
-
-		if (turnTimer_ > 0.0f) {
-			turnTimer_ += 1.0f / 60.0f;
-
-			float destinationRotationYTable[] = {std::numbers::pi_v<float> / 2.0f, std::numbers::pi_v<float> * 3.0f / 2.0f};
-			float destinationRotationY = destinationRotationYTable[static_cast<uint32_t>(lrDirection_)];
+		if (Input::GetInstance()->PushKey(DIK_UP)) {
+			// ジャンプ初速
+			velocity_ += Vector3(0, kJumpAcceleration / 60.0f, 0);
 		}
+	}
+	// 空中
+	else {
+		// 落下速度
+		velocity_ += Vector3(0, -kGravityAcceleration / 60.0f, 0);
+		// 落下速度制限
+		velocity_.y = std::max(velocity_.y, -kLimitFallSpeed);
 	}
 
 	worldTransform_.translation_ += velocity_;
+
+	bool landing = false;
+
+	// 下降あり？
+	if (velocity_.y < 0) {
+		// Y座標が地面以下になったら着地
+		if (worldTransform_.translation_.y <= 1.0f) {
+			landing = true;
+		}
+	}
+
+	// 接地判定
+	if (onGround_) {
+		// ジャンプ開始
+		if (velocity_.y > 0.0f) {
+			onGround_ = false;
+		}
+	} else {
+		// 着地
+		if (landing) {
+			worldTransform_.translation_.y = 1.0f;
+			velocity_.x *= (1.0f - kAttenuation);
+			velocity_.y = 0.0f;
+			onGround_ = true;
+		}
+	}
+
+	if (turnTimer_ > 0.0f) {
+		// タイマーを進める
+		turnTimer_ = std::max(turnTimer_ - (1.0f / 60.0f), 0.0f);
+
+		float destinationRotationYTable[] = {std::numbers::pi_v<float> / 2.0f, std::numbers::pi_v<float> * 3.0f / 2.0f};
+
+		float destinationRotationY = destinationRotationYTable[static_cast<uint32_t>(lrDirection_)];
+
+		worldTransform_.rotation_.y = EaseInOutAngle(turnFirstRotationY_, destinationRotationY, 1.0f - (turnTimer_ / kTimeTurn));
+
+	}
 
 	worldTransform_.matWorld_ = MakeAffineMatrix(worldTransform_.scale_, worldTransform_.rotation_, worldTransform_.translation_);
 
 	worldTransform_.TransferMatrix();
 }
-void Player::Draw() { model_->Draw(worldTransform_, *camera_); }
+
+void Player::Draw() {
+
+	// モデル描画
+	model_->Draw(worldTransform_, *camera_);
+}

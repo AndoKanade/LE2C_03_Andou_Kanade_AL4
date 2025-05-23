@@ -110,3 +110,24 @@ Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Ve
 
 	return affineMatrix;
 }
+
+float Lerp(float a, float b, float t) { return a + (b - a) * t; }
+
+float EaseInOut(float x1, float x2, float t) {
+	float easedT = -(std::cosf(std::numbers::pi_v<float> * t) - 1.0f / 2.0f);
+	return Lerp(x1, x2, easedT);
+}
+
+float NormalizeAngle(float angle) {
+	while (angle > std::numbers::pi_v<float>)
+		angle -= std::numbers::pi_v<float> * 2.0f;
+	while (angle < -std::numbers::pi_v<float>)
+		angle += std::numbers::pi_v<float> * 2.0f;
+	return angle;
+}
+
+float EaseInOutAngle(float from, float to, float t) {
+	float delta = NormalizeAngle(to - from);
+	float easedT = -(std::cosf(std::numbers::pi_v<float> * t) - 1.0f) / 2.0f;
+	return from + delta * easedT;
+}
