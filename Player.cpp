@@ -37,8 +37,8 @@ void Player ::Update() {
 
 				acceleration.x += kAcceleration;
 
-				if (lrDirection_ != LRDirection::kRight) {
-					lrDirection_ = LRDirection::kRight;
+				if (lrDirection_ != LRDirection::kLeft) {
+					lrDirection_ = LRDirection::kLeft;
 					turnFirstRotationY_ = worldTransform_.rotation_.y;
 					turnTimer_ = KTimeTurn;
 				}
@@ -51,8 +51,8 @@ void Player ::Update() {
 
 				acceleration.x -= kAcceleration;
 
-				if (lrDirection_ != LRDirection::kLeft) {
-					lrDirection_ = LRDirection::kLeft;
+				if (lrDirection_ != LRDirection::kRight) {
+					lrDirection_ = LRDirection::kRight;
 					turnFirstRotationY_ = worldTransform_.rotation_.y;
 					turnTimer_ = KTimeTurn;
 				}
@@ -109,20 +109,33 @@ void Player ::Update() {
 		}
 	}
 
-	// 旋回制御
 	if (turnTimer_ > 0.0f) {
 		// タイマーを進める
-		turnTimer_ = std::max(turnTimer_ - (1.0f / 60.0f), 0.0f);
+		turnTimer_ += 1.0f / 60.0f;
+		if (turnTimer_ > 1.0f) {
+			turnTimer_ = 1.0f;
+		}
 
-		float destinationRotationYTable[] = {std::numbers::pi_v<float> / 2.0f, std::numbers::pi_v<float> * 3.0f / 2.0f};
-
+		// 目標角度のテーブル
+		float destinationRotationYTable[] = {
+		    std::numbers::pi_v<float> / 2.0f,       // 右向き
+		    std::numbers::pi_v<float> * 3.0f / 2.0f // 左向き
+		};
 		float destinationRotationY = destinationRotationYTable[static_cast<uint32_t>(lrDirection_)];
 
-		worldTransform_.rotation_.y = EaseInOut(destinationRotationY, turnFirstRotationY_, turnTimer_ / KTimeTurn);
+		// EaseInOutを使った補間
+		float t = EaseInOut(turnTimer_);
+		worldTransform_.rotation_.y = turnFirstRotationY_ + (destinationRotationY - turnFirstRotationY_) * t;
+
+		// 回転完了後にタイマーをリセット
+		if (turnTimer_ >= 1.0f) {
+			turnTimer_ = 0.0f;
+		}
 	}
 
-	// ワールド行列更新（アフィン変換～DirectXに転送）
-	WorldTransform(worldTransform_);
+	worldTransform_.matWorld_ = MakeAffineMatrix(worldTransform_.scale_, worldTransform_.rotation_, worldTransform_.translation_);
+
+	worldTransform_.TransferMatrix();
 }
 
 void Player::Draw() {
