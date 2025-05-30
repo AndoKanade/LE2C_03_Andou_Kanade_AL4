@@ -19,8 +19,7 @@ void Player::Initialize(Model* model, Camera* camera, const Vector3& position) {
 	camera_ = camera;
 }
 
-void Player ::Update() {
-
+void Player::Move() {
 	// 移動入力
 	if (onGround_) {
 		if (Input::GetInstance()->PushKey(DIK_RIGHT) || Input::GetInstance()->PushKey(DIK_LEFT)) {
@@ -108,6 +107,21 @@ void Player ::Update() {
 			onGround_ = true;
 		}
 	}
+}
+
+//void Player::MapCollisionDetection(CollisionMapInfo& info) {
+//	
+//
+//}
+
+void Player ::Update() {
+
+	Move();
+
+	//CollisionMapInfo collisionMapInfo;
+	//collisionMapInfo.velocity = velocity_;
+
+	//MapCollisionDetection(collisionMapInfo);
 
 	if (turnTimer_ > 0.0f) {
 		// タイマーを進める
@@ -124,6 +138,8 @@ void Player ::Update() {
 
 	worldTransform_.TransferMatrix();
 }
+
+
 
 void Player::Draw() {
 

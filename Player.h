@@ -5,22 +5,15 @@
 #include <numbers>
 #include <string>
 
+class MapChipField;
 using namespace KamataEngine;
 
 class Player {
-
 public:
 	enum class LRDirection {
 		kLeft,
 		kRight,
 	};
-
-	void Initialize(Model* model, Camera* camera, const Vector3& position);
-	void Update();
-	void Draw();
-
-	const WorldTransform& GetWorldTransform() const { return worldTransform_; }
-	const Vector3& GetVelocity() const { return velocity_; }
 
 private:
 	WorldTransform worldTransform_;
@@ -43,4 +36,29 @@ private:
 	static inline const float kGravityAcceleration = 0.98f;
 	static inline const float kLimitFallSpeed = 0.5f;
 	static inline const float kJumpAcceleration = 20.0f;
+
+	MapChipField* mapChipField_ = nullptr;
+
+	static inline const float kWidth = 0.8f;
+	static inline const float kHeight = 0.8f;
+
+	struct CollisionMapInfo {
+		bool isHittingCeiling = false; // 天井に当たっているか
+		bool isHittingFloor = false;   // 床に当たっているか
+		bool isHittingWall = false;    // 壁に当たっているか
+		Vector3 velocity;              // 移動量
+	};
+
+public:
+
+	void Initialize(Model* model, Camera* camera, const Vector3& position);
+	void Update();
+	void Move();
+	void MapCollisionDetection(CollisionMapInfo& info);
+	void Draw();
+
+	void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
+
+	const WorldTransform& GetWorldTransform() const { return worldTransform_; }
+	const Vector3& GetVelocity() const { return velocity_; }
 };

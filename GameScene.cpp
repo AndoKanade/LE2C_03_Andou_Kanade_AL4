@@ -53,6 +53,13 @@ void GameScene::Initialize() {
 	mapChipField_->LoadMapChipCsv("Resources/MapChip.csv");
 	GenerateBlocks();
 
+	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(1, 18);
+	player_ = new Player();
+	playerModel_ = Model::CreateFromOBJ("player", true);
+	player_->Initialize(playerModel_, &camera_, playerPosition);
+
+	player_->SetMapChipField(mapChipField_);
+
 	// worldTransform_.Initialize();
 
 	camera_.farZ = 1000.0f; // カメラの遠くの描画距離
@@ -64,12 +71,6 @@ void GameScene::Initialize() {
 	skydome_ = new Skydome();
 	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
 	skydome_->Initialize(&camera_, modelSkydome_);
-
-	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(1, 18);
-
-	player_ = new Player();
-	playerModel_ = Model::CreateFromOBJ("player", true);
-	player_->Initialize(playerModel_, &camera_, playerPosition);
 
 	cameraController_ = new CameraController();
 
