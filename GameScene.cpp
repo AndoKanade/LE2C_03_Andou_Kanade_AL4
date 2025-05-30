@@ -56,10 +56,8 @@ void GameScene::Initialize() {
 	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(1, 18);
 	player_ = new Player();
 	playerModel_ = Model::CreateFromOBJ("player", true);
-	player_->Initialize(playerModel_, &camera_, playerPosition);
-
 	player_->SetMapChipField(mapChipField_);
-
+	player_->Initialize(playerModel_, &camera_, playerPosition);
 	// worldTransform_.Initialize();
 
 	camera_.farZ = 1000.0f; // カメラの遠くの描画距離

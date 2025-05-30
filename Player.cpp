@@ -109,19 +109,16 @@ void Player::Move() {
 	}
 }
 
-//void Player::MapCollisionDetection(CollisionMapInfo& info) {
-//	
-//
-//}
+void Player::MapCollisionDetection(CollisionMapInfo& info) {}
 
 void Player ::Update() {
 
 	Move();
 
-	//CollisionMapInfo collisionMapInfo;
-	//collisionMapInfo.velocity = velocity_;
+	CollisionMapInfo collisionMapInfo;
+	collisionMapInfo.velocity = velocity_;
 
-	//MapCollisionDetection(collisionMapInfo);
+	MapCollisionDetection(collisionMapInfo);
 
 	if (turnTimer_ > 0.0f) {
 		// タイマーを進める
@@ -138,8 +135,6 @@ void Player ::Update() {
 
 	worldTransform_.TransferMatrix();
 }
-
-
 
 void Player::Draw() {
 
