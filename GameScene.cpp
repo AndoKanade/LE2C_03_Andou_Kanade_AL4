@@ -70,6 +70,15 @@ void GameScene::Initialize() {
 	player_ = new Player();
 	playerModel_ = Model::CreateFromOBJ("player", true);
 	player_->Initialize(playerModel_, &camera_, playerPosition);
+
+	cameraController_ = new CameraController();
+
+	cameraController_->Initialize(&camera_);
+	cameraController_->SetTarget(player_);
+	cameraController_->Reset();
+
+	CameraController::Rect cameraArea = {12.0f, 100 - 12.0f, 6.0f, 6.0f};
+	cameraController_->SetMovableArea(cameraArea);
 }
 
 void GameScene::Update() {
@@ -77,6 +86,7 @@ void GameScene::Update() {
 
 	player_->Update();
 	skydome_->Update();
+	cameraController_->Update();
 
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {

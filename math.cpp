@@ -1,4 +1,18 @@
 #include "Math.h"
+#include <cmath>
+#include <numbers>
+
+const Vector3 operator*(const Vector3& v1, const float f) {
+	Vector3 temp(v1);
+	return temp *= f;
+}
+
+const Vector3 operator+(const Vector3& v1, const Vector3& v2) {
+	Vector3 temp(v1);
+	return temp += v2;
+}
+
+Vector3 Lerp(const Vector3& v1, const Vector3& v2, float t) { return Vector3(Lerp(v1.x, v2.x, t), Lerp(v1.y, v2.y, t), Lerp(v1.z, v2.z, t)); }
 
 Vector3& operator+=(Vector3& lhv, const Vector3& rhv) {
 	lhv.x += rhv.x;
@@ -6,6 +20,7 @@ Vector3& operator+=(Vector3& lhv, const Vector3& rhv) {
 	lhv.z += rhv.z;
 	return lhv;
 }
+
 Vector3& operator-=(Vector3& lhv, const Vector3& rhv) {
 	lhv.x -= rhv.x;
 	lhv.y -= rhv.y;
@@ -13,108 +28,122 @@ Vector3& operator-=(Vector3& lhv, const Vector3& rhv) {
 	return lhv;
 }
 
+Vector3& operator*=(Vector3& v, float s) {
+	v.x *= s;
+	v.y *= s;
+	v.z *= s;
+	return v;
+}
+
+Vector3& operator/=(Vector3& v, float s) {
+	v.x /= s;
+	v.y /= s;
+	v.z /= s;
+	return v;
+}
+
+Matrix4x4 MakeIdentityMatrix() {
+	static const Matrix4x4 result{1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+
+	return result;
+}
+
 Matrix4x4 MakeScaleMatrix(const Vector3& scale) {
-	Matrix4x4 matrix = {}; // すべて0で初期化
-	// スケール行列の設定
-	matrix.m[0][0] = scale.x;
-	matrix.m[1][1] = scale.y;
-	matrix.m[2][2] = scale.z;
-	matrix.m[3][3] = 1.0f;
-	return matrix;
-}
 
-Matrix4x4 MakeRotateXMatrix(float radian) {
-	Matrix4x4 result{};
-
-	result.m[0][0] = 1;
-	result.m[3][3] = 1;
-
-	// X軸回転に必要な部分だけ上書き
-	result.m[1][1] = std::cos(radian);
-	result.m[1][2] = std::sin(radian);
-	result.m[2][1] = -std::sin(radian);
-	result.m[2][2] = std::cos(radian);
+	Matrix4x4 result{scale.x, 0.0f, 0.0f, 0.0f, 0.0f, scale.y, 0.0f, 0.0f, 0.0f, 0.0f, scale.z, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
 	return result;
 }
 
-Matrix4x4 MakeRotateYMatrix(float radian) {
-	Matrix4x4 result{};
+Matrix4x4 MakeRotateXMatrix(float theta) {
+	float sin = std::sin(theta);
+	float cos = std::cos(theta);
 
-	result.m[1][1] = 1.0f;
-	result.m[3][3] = 1.0f;
-
-	result.m[0][0] = std::cos(radian);
-	result.m[0][2] = -std::sin(radian);
-	result.m[2][0] = std::sin(radian);
-	result.m[2][2] = std::cos(radian);
+	Matrix4x4 result{1.0f, 0.0f, 0.0f, 0.0f, 0.0f, cos, sin, 0.0f, 0.0f, -sin, cos, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
 	return result;
 }
 
-// Z軸回転行列
-Matrix4x4 MakeRotateZMatrix(float radian) {
-	Matrix4x4 result{};
+Matrix4x4 MakeRotateYMatrix(float theta) {
+	float sin = std::sin(theta);
+	float cos = std::cos(theta);
 
-	result.m[2][2] = 1;
-	result.m[3][3] = 1;
+	Matrix4x4 result{cos, 0.0f, -sin, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, sin, 0.0f, cos, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
-	result.m[0][0] = std::cos(radian);
-	result.m[0][1] = std::sin(radian);
-	result.m[1][0] = -std::sin(radian);
-	result.m[1][1] = std::cos(radian);
+	return result;
+}
+
+Matrix4x4 MakeRotateZMatrix(float theta) {
+	float sin = std::sin(theta);
+	float cos = std::cos(theta);
+
+	Matrix4x4 result{cos, sin, 0.0f, 0.0f, -sin, cos, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
 	return result;
 }
 
 Matrix4x4 MakeTranslateMatrix(const Vector3& translate) {
-	Matrix4x4 matrix = {}; // すべて0で初期化
-	// 単位行列の形に設定
-	matrix.m[0][0] = 1.0f;
-	matrix.m[1][1] = 1.0f;
-	matrix.m[2][2] = 1.0f;
-	matrix.m[3][3] = 1.0f;
-	// 平行移動成分を設定
-	matrix.m[3][0] = translate.x;
-	matrix.m[3][1] = translate.y;
-	matrix.m[3][2] = translate.z;
-	return matrix;
-}
+	Matrix4x4 result{1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, translate.x, translate.y, translate.z, 1.0f};
 
-Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2) {
-	Matrix4x4 result{};
-	for (int row = 0; row < 4; ++row) {
-		for (int col = 0; col < 4; ++col) {
-			result.m[row][col] = 0.0f;
-			for (int k = 0; k < 4; ++k) {
-				result.m[row][col] += m1.m[row][k] * m2.m[k][col];
-			}
-		}
-	}
 	return result;
 }
 
-Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate) {
+Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rot, const Vector3& translate) {
 
-	Matrix4x4 scaleMatrix = MakeScaleMatrix(scale);
-	Matrix4x4 rotateX = MakeRotateXMatrix(rotate.x);
-	Matrix4x4 rotateY = MakeRotateYMatrix(rotate.y);
-	Matrix4x4 rotateZ = MakeRotateZMatrix(rotate.z);
+	// スケーリング行列の作成
+	Matrix4x4 matScale = MakeScaleMatrix(scale);
 
-	// 回転順: Z → X → Y →（スケーリング）→ 平行移動
-	Matrix4x4 rotateMatrix = Multiply(Multiply(rotateX, rotateY), rotateZ);
+	Matrix4x4 matRotX = MakeRotateXMatrix(rot.x);
+	Matrix4x4 matRotY = MakeRotateYMatrix(rot.y);
+	Matrix4x4 matRotZ = MakeRotateZMatrix(rot.z);
+	// 回転行列の合成
+	Matrix4x4 matRot = matRotZ * matRotX * matRotY;
 
-	Matrix4x4 translateMatrix = MakeTranslateMatrix(translate);
+	// 平行移動行列の作成
+	Matrix4x4 matTrans = MakeTranslateMatrix(translate);
 
-	Matrix4x4 affineMatrix = Multiply(Multiply(scaleMatrix, rotateMatrix), translateMatrix);
+	// スケーリング、回転、平行移動の合成
+	Matrix4x4 matTransform = matScale * matRot * matTrans;
 
-	return affineMatrix;
+	return matTransform;
 }
 
-float Lerp(float a, float b, float t) { return a + (b - a) * t; }
+Matrix4x4& operator*=(Matrix4x4& lhm, const Matrix4x4& rhm) {
+	Matrix4x4 result{};
+
+	for (size_t i = 0; i < 4; i++) {
+		for (size_t j = 0; j < 4; j++) {
+			for (size_t k = 0; k < 4; k++) {
+				result.m[i][j] += lhm.m[i][k] * rhm.m[k][j];
+			}
+		}
+	}
+	lhm = result;
+	return lhm;
+}
+
+Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4& m2) {
+	Matrix4x4 result = m1;
+
+	return result *= m2;
+}
+
+// ワールドトランスフォーム更新(02_03の最後)
+void WorldTransformUpdate(WorldTransform& worldTransform) {
+
+	Matrix4x4 affin_mat = MakeAffineMatrix(worldTransform.scale_, worldTransform.rotation_, worldTransform.translation_);
+
+	worldTransform.matWorld_ = affin_mat;
+
+	// 定数バッファに転送する
+	worldTransform.TransferMatrix();
+}
+
+float Lerp(float x1, float x2, float t) { return (1.0f - t) * x1 + t * x2; }
 
 float EaseInOut(float x1, float x2, float t) {
-	float easedT = -(std::cosf(std::numbers::pi_v<float> * t) - 1.0f / 2.0f);
+	float easedT = -(std::cosf(std::numbers::pi_v<float> * t) - 1.0f) / 2.0f;
+
 	return Lerp(x1, x2, easedT);
 }
 
@@ -130,4 +159,10 @@ float EaseInOutAngle(float from, float to, float t) {
 	float delta = NormalizeAngle(to - from);
 	float easedT = -(std::cosf(std::numbers::pi_v<float> * t) - 1.0f) / 2.0f;
 	return from + delta * easedT;
+}
+
+bool IsCollision(const AABB& aabb1, const AABB& aabb2) {
+	return (aabb1.min.x <= aabb2.max.x && aabb1.max.x >= aabb2.min.x) && // x軸
+	       (aabb1.min.y <= aabb2.max.y && aabb1.max.y >= aabb2.min.y) && // y軸
+	       (aabb1.min.z <= aabb2.max.z && aabb1.max.z >= aabb2.min.z);   // z軸
 }

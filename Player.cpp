@@ -118,7 +118,6 @@ void Player ::Update() {
 		float destinationRotationY = destinationRotationYTable[static_cast<uint32_t>(lrDirection_)];
 
 		worldTransform_.rotation_.y = EaseInOutAngle(turnFirstRotationY_, destinationRotationY, 1.0f - (turnTimer_ / kTimeTurn));
-
 	}
 
 	worldTransform_.matWorld_ = MakeAffineMatrix(worldTransform_.scale_, worldTransform_.rotation_, worldTransform_.translation_);
