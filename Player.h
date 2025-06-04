@@ -10,6 +10,15 @@ using namespace KamataEngine;
 
 class Player {
 public:
+	enum Corner {
+		kTopLeft,
+		kTopRight,
+		kBottomLeft,
+		kBottomRight,
+		kNumCorner
+
+	};
+
 	enum class LRDirection {
 		kLeft,
 		kRight,
@@ -42,23 +51,30 @@ private:
 	static inline const float kWidth = 0.8f;
 	static inline const float kHeight = 0.8f;
 
+	static inline const float kBlank = 0.04f;
+
 	struct CollisionMapInfo {
-		bool isHittingCeiling = false; // 天井に当たっているか
-		bool isHittingFloor = false;   // 床に当たっているか
-		bool isHittingWall = false;    // 壁に当たっているか
+		bool ceiling = false; // 天井に当たっているか
+		bool landing = false;   // 床に当たっているか
+		bool hitWall = false;    // 壁に当たっているか
 		Vector3 velocity;              // 移動量
 	};
 
 public:
-
 	void Initialize(Model* model, Camera* camera, const Vector3& position);
 	void Update();
 	void Move();
-	void MapCollisionDetection(CollisionMapInfo& info);
+	void CheckMapCollision(CollisionMapInfo& info);
+	void CheckMapCollisionUp(CollisionMapInfo& info);
+	void CheckMapCollisionDown(CollisionMapInfo& info);
+	void CheckMapCollisionRight(CollisionMapInfo& info);
+	void CheckMapCollisionLeft(CollisionMapInfo& info);
 	void Draw();
 
 	void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
 
 	const WorldTransform& GetWorldTransform() const { return worldTransform_; }
 	const Vector3& GetVelocity() const { return velocity_; }
+
+	Vector3 CornerPosition(const Vector3& center, Corner corner);
 };

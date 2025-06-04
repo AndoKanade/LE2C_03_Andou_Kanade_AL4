@@ -19,30 +19,6 @@ GameScene::~GameScene() {
 	delete modelSkydome_;
 	delete mapChipField_;
 }
-
-void GameScene::GenerateBlocks() {
-	const uint32_t NumBlockVirtical = mapChipField_->GetnumBlockVirtivcal();
-	const uint32_t NumBlockHorizontal = mapChipField_->GetnumBlockHorizontal();
-
-	worldTransformBlocks_.resize(NumBlockVirtical);
-
-	for (uint32_t i = 0; i < NumBlockVirtical; i++) {
-		worldTransformBlocks_[i].resize(NumBlockHorizontal);
-	}
-
-	for (uint32_t i = 0; i < NumBlockVirtical; i++) {
-		for (uint32_t j = 0; j < NumBlockHorizontal; j++) {
-			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kBlock) {
-				WorldTransform* worldTransform = new WorldTransform();
-
-				worldTransform->Initialize();
-				worldTransformBlocks_[i][j] = worldTransform;
-				worldTransform->translation_ = mapChipField_->GetMapChipPositionByIndex(j, i);
-			}
-		}
-	}
-}
-
 void GameScene::Initialize() {
 	// ここにインゲームの初期化処理を書く
 
@@ -78,6 +54,31 @@ void GameScene::Initialize() {
 
 	CameraController::Rect cameraArea = {12.0f, 100 - 12.0f, 6.0f, 6.0f};
 	cameraController_->SetMovableArea(cameraArea);
+}
+
+void GameScene::GenerateBlocks() {
+
+	uint32_t numBlockVirtical = mapChipField_->GetNumBlockVirtical();
+	uint32_t numBlockHorizontal = mapChipField_->GetNumBlockHorizontal();
+
+	worldTransformBlocks_.resize(numBlockVirtical);
+	for (uint32_t i = 0; i < numBlockVirtical; ++i) {
+		worldTransformBlocks_[i].resize(numBlockHorizontal);
+	}
+
+	// ブロックの生成
+	for (uint32_t i = 0; i < numBlockVirtical; ++i) {
+
+		for (uint32_t j = 0; j < numBlockHorizontal; ++j) {
+
+			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kBlock) {
+				WorldTransform* worldTransform = new WorldTransform();
+				worldTransform->Initialize();
+				worldTransformBlocks_[i][j] = worldTransform;
+				worldTransformBlocks_[i][j]->translation_ = mapChipField_->GetMapChipPositionByIndex(j, i);
+			}
+		}
+	}
 }
 
 void GameScene::Update() {
