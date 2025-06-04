@@ -29,10 +29,14 @@ void GameScene::Initialize() {
 	mapChipField_->LoadMapChipCsv("Resources/MapChip.csv");
 	GenerateBlocks();
 
-	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(1, 18);
 	player_ = new Player();
-	playerModel_ = Model::CreateFromOBJ("player", true);
+
+	// プレイヤーモデル
+	playerModel_ = Model::CreateFromOBJ("player");
+	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(2, 18);
+
 	player_->SetMapChipField(mapChipField_);
+
 	player_->Initialize(playerModel_, &camera_, playerPosition);
 	// worldTransform_.Initialize();
 
@@ -88,6 +92,26 @@ void GameScene::Update() {
 	skydome_->Update();
 	cameraController_->Update();
 
+#ifdef _DEBUG
+
+	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+		if (!isDebugCameraActive_) {
+			isDebugCameraActive_ = true;
+		} else {
+			isDebugCameraActive_ = false;
+		}
+	}
+#endif
+
+	if (isDebugCameraActive_) {
+		debugCamera_->Update();
+		camera_.matView = debugCamera_->GetCamera().matView;
+		camera_.matProjection = debugCamera_->GetCamera().matProjection;
+		camera_.TransferMatrix();
+	} else {
+		camera_.UpdateMatrix();
+	}
+
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
 			if (!worldTransformBlock) {
@@ -102,47 +126,37 @@ void GameScene::Update() {
 	}
 
 	debugCamera_->Update();
-#ifdef _DEBUG
-
-	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
-
-		// isDebugCameraActive_ = true;
-
-		if (!isDebugCameraActive_) {
-			isDebugCameraActive_ = true;
-		} else {
-			isDebugCameraActive_ = false;
-		}
-	}
-
-	if (isDebugCameraActive_) {
-		debugCamera_->Update();
-		camera_.matView = debugCamera_->GetCamera().matView;
-		camera_.matProjection = debugCamera_->GetCamera().matProjection;
-		camera_.TransferMatrix();
-	} else {
-		camera_.UpdateMatrix();
-	}
-
-#endif
 }
 
 void GameScene::Draw() {
-	// ここにインゲームの描画処理を書く
+
+	// DirectXCommonインスタンスの取得
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 
+	// 3Dオブジェクト描画前処理
 	Model::PreDraw(dxCommon->GetCommandList());
+
+	// 自キャラの描画
 	player_->Draw();
+
+	// 天球描画
 	skydome_->Draw();
+
+	// ブロックの描画
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
-		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
-			if (!worldTransformBlock) {
+		for (WorldTransform*& worldTransformBlock : worldTransformBlockLine) {
+			if (!worldTransformBlock)
 				continue;
-			}
 
 			modelBlock_->Draw(*worldTransformBlock, camera_);
 		}
 	}
 
 	Model::PostDraw();
+
+	// スプライト描画前処理
+	Sprite::PreDraw(dxCommon->GetCommandList());
+
+	// スプライト描画後処理
+	Sprite::PostDraw();
 }
