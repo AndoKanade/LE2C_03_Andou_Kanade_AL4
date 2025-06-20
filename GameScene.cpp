@@ -18,6 +18,7 @@ GameScene::~GameScene() {
 	delete debugCamera_;
 	delete modelSkydome_;
 	delete mapChipField_;
+	delete enemy_;
 }
 void GameScene::Initialize() {
 	// ここにインゲームの初期化処理を書く
@@ -58,6 +59,13 @@ void GameScene::Initialize() {
 
 	CameraController::Rect cameraArea = {12.0f, 100 - 12.0f, 6.0f, 6.0f};
 	cameraController_->SetMovableArea(cameraArea);
+
+	enemy_ = new Enemy();
+
+	enemy_model_ = Model::CreateFromOBJ("enemy");
+
+	Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(14, 18);
+	enemy_->Initialize(enemy_model_, &camera_, enemyPosition);
 }
 
 void GameScene::GenerateBlocks() {
@@ -91,6 +99,7 @@ void GameScene::Update() {
 	player_->Update();
 	skydome_->Update();
 	cameraController_->Update();
+	enemy_->Update();
 
 #ifdef _DEBUG
 
@@ -151,6 +160,8 @@ void GameScene::Draw() {
 			modelBlock_->Draw(*worldTransformBlock, camera_);
 		}
 	}
+
+	enemy_->Draw();
 
 	Model::PostDraw();
 
