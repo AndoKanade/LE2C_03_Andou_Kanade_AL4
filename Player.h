@@ -66,6 +66,9 @@ private:
 	static inline const float kHeight = 0.8f;
 
 	static inline const float kBlank = 0.04f;
+	static inline const float kAttenuationLanding = 0.0f;
+	static inline const float kGroundSearchHeight = 0.06f;
+	static inline const float kAttenuationWall = 0.2f;
 
 	void InputMove();
 
@@ -83,4 +86,7 @@ private:
 	void CheckMapCollisionRight(CollisionMapInfo& info);
 	void CheckMapCollisionLeft(CollisionMapInfo& info);
 	Vector3 CornerPosition(const Vector3& center, Corner corner);
+
+	void UpdateOnGround(const CollisionMapInfo& info);
+	void UpdateOnWall(const CollisionMapInfo& info);
 };
