@@ -18,6 +18,10 @@ public:
 
 	void Draw();
 
+	void GenerateBlocks();
+
+	void CheckAllCollisions();
+
 private:
 	KamataEngine::Model* model_ = nullptr;
 	KamataEngine::Model* modelBlock_ = nullptr;
@@ -34,8 +38,10 @@ private:
 	Model* playerModel_ = nullptr;
 
 	MapChipField* mapChipField_;
-	void GenerateBlocks();
+
 	CameraController* cameraController_ = nullptr;
 	Enemy* enemy_ = nullptr;
 	KamataEngine::Model* enemy_model_ = nullptr;
+
+	std::list<Enemy*> enemies_;
 };
