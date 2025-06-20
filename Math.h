@@ -56,3 +56,5 @@ float NormalizeAngle(float angle);
 float EaseInOutAngle(float from, float to, float t);
 
 bool IsCollision(const AABB& aabb1, const AABB& aabb2);
+
+Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix);
