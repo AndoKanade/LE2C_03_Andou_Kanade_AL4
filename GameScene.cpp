@@ -42,7 +42,7 @@ void GameScene::Initialize() {
 	playerModel_ = Model::CreateFromOBJ("player");
 	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(2, 18);
 
-	modelPlayerAttack_ = Model::CreateFromOBJ("attack_effect", true);
+	modelPlayerAttack_ = Model::CreateFromOBJ("attack_effect");
 
 	player_->SetMapChipField(mapChipField_);
 
