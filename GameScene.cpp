@@ -150,13 +150,13 @@ void GameScene::Update() {
 
 #ifdef _DEBUG
 
-	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
-		if (!isDebugCameraActive_) {
-			isDebugCameraActive_ = true;
-		} else {
-			isDebugCameraActive_ = false;
-		}
-	}
+	//if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+	//	if (!isDebugCameraActive_) {
+	//		isDebugCameraActive_ = true;
+	//	} else {
+	//		isDebugCameraActive_ = false;
+	//	}
+	//}
 #endif
 
 	if (isDebugCameraActive_) {
