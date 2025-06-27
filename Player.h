@@ -37,6 +37,8 @@ public:
 
 	void OnCollision(const Enemy* enemy);
 
+	bool IsDead() const { return IsDead_; }
+
 private:
 	// ワールド変換データ
 	WorldTransform worldTransform_;
@@ -97,4 +99,6 @@ private:
 
 	void UpdateOnGround(const CollisionMapInfo& info);
 	void UpdateOnWall(const CollisionMapInfo& info);
+
+	bool IsDead_ = false;
 };

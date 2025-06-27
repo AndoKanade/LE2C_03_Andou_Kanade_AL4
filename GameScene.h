@@ -23,7 +23,17 @@ public:
 
 	void CheckAllCollisions();
 
+	bool IsFinished() const { return finished_; }
+
 private:
+	enum class Phase {
+		kPlay,
+		kDeath,
+	};
+	Phase phase_;
+
+	void ChangePhase();
+
 	KamataEngine::Model* model_ = nullptr;
 	KamataEngine::Model* modelBlock_ = nullptr;
 	bool isDebugCameraActive_ = false;
@@ -47,4 +57,6 @@ private:
 	std::list<Enemy*> enemies_;
 	DeathParticles* deathParticles_ = nullptr;
 	Model* deathParticle_model_ = nullptr;
+
+	bool finished_ = false;
 };
