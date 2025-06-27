@@ -23,6 +23,8 @@ public:
 
 	void CheckAllCollisions();
 
+	bool IsFinished() const { return finished_; }
+
 private:
 	enum class Phase {
 		kPlay,
@@ -55,4 +57,6 @@ private:
 	std::list<Enemy*> enemies_;
 	DeathParticles* deathParticles_ = nullptr;
 	Model* deathParticle_model_ = nullptr;
+
+	bool finished_ = false;
 };
