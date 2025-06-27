@@ -7,6 +7,7 @@ GameScene::~GameScene() {
 	delete model_;
 	delete modelBlock_;
 	delete playerModel_;
+	delete modelPlayerAttack_;
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
 			delete worldTransformBlock;
@@ -41,9 +42,11 @@ void GameScene::Initialize() {
 	playerModel_ = Model::CreateFromOBJ("player");
 	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(2, 18);
 
+	modelPlayerAttack_ = Model::CreateFromOBJ("attack_effect");
+
 	player_->SetMapChipField(mapChipField_);
 
-	player_->Initialize(playerModel_, &camera_, playerPosition);
+	player_->Initialize(playerModel_,modelPlayerAttack_, &camera_, playerPosition);
 	// worldTransform_.Initialize();
 
 	camera_.farZ = 1000.0f; // カメラの遠くの描画距離
@@ -150,13 +153,13 @@ void GameScene::Update() {
 
 #ifdef _DEBUG
 
-	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
-		if (!isDebugCameraActive_) {
-			isDebugCameraActive_ = true;
-		} else {
-			isDebugCameraActive_ = false;
-		}
-	}
+	//if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+	//	if (!isDebugCameraActive_) {
+	//		isDebugCameraActive_ = true;
+	//	} else {
+	//		isDebugCameraActive_ = false;
+	//	}
+	//}
 #endif
 
 	if (isDebugCameraActive_) {
