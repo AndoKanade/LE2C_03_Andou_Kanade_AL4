@@ -24,6 +24,14 @@ public:
 	void CheckAllCollisions();
 
 private:
+	enum class Phase {
+		kPlay,
+		kDeath,
+	};
+	Phase phase_;
+
+	void ChangePhase();
+
 	KamataEngine::Model* model_ = nullptr;
 	KamataEngine::Model* modelBlock_ = nullptr;
 	bool isDebugCameraActive_ = false;

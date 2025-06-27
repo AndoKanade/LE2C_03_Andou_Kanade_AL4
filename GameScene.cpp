@@ -76,8 +76,28 @@ void GameScene::Initialize() {
 
 	deathParticle_model_ = Model::CreateFromOBJ("deathParticle");
 
-	deathParticles_ = new DeathParticles;
-	deathParticles_->Initialize(deathParticle_model_, &camera_, playerPosition);
+	phase_ = Phase::kPlay;
+}
+
+void GameScene::ChangePhase() {
+
+	switch (phase_) {
+	case Phase::kPlay:
+		// 02_12 13枚目 if文から中身まで全部実装
+		// Initialize関数のいきなりパーティクル発生処理は消す
+		if (player_->IsDead()) {
+			// 死亡演出
+			phase_ = Phase::kDeath;
+
+			const Vector3& deathParticlesPosition = player_->GetWorldPosition();
+
+			deathParticles_ = new DeathParticles;
+			deathParticles_->Initialize(deathParticle_model_, &camera_, deathParticlesPosition);
+		}
+		break;
+	case Phase::kDeath:
+		break;
+	}
 }
 
 void GameScene::GenerateBlocks() {
@@ -107,6 +127,15 @@ void GameScene::GenerateBlocks() {
 
 void GameScene::Update() {
 	// ここにインゲームの更新処理を書く
+	ChangePhase();
+
+	switch (phase_) {
+	case Phase::kPlay:
+		break;
+
+	case Phase::kDeath:
+		break;
+	}
 
 	player_->Update();
 	skydome_->Update();
@@ -166,7 +195,9 @@ void GameScene::Draw() {
 	Model::PreDraw(dxCommon->GetCommandList());
 
 	// 自キャラの描画
-	player_->Draw();
+	if (!player_->IsDead()) {
+		player_->Draw();
+	}
 
 	// 天球描画
 	skydome_->Draw();
