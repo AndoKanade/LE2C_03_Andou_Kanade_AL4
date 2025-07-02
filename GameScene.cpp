@@ -46,7 +46,7 @@ void GameScene::Initialize() {
 
 	player_->SetMapChipField(mapChipField_);
 
-	player_->Initialize(playerModel_,modelPlayerAttack_, &camera_, playerPosition);
+	player_->Initialize(playerModel_, modelPlayerAttack_, &camera_, playerPosition);
 	// worldTransform_.Initialize();
 
 	camera_.farZ = 1000.0f; // カメラの遠くの描画距離
@@ -147,19 +147,28 @@ void GameScene::Update() {
 	player_->Update();
 	skydome_->Update();
 	cameraController_->Update();
+
+	enemies_.remove_if([](Enemy* enemy) {
+		if (enemy->IsDead()) {
+			delete enemy;
+			return true;
+		}
+		return false;
+	});
+
 	for (Enemy* enemy : enemies_) {
 		enemy->Update();
 	}
 
 #ifdef _DEBUG
 
-	//if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+	// if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
 	//	if (!isDebugCameraActive_) {
 	//		isDebugCameraActive_ = true;
 	//	} else {
 	//		isDebugCameraActive_ = false;
 	//	}
-	//}
+	// }
 #endif
 
 	if (isDebugCameraActive_) {

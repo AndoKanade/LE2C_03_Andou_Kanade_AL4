@@ -57,4 +57,12 @@ Vector3 Enemy::GetWorldPosition() {
 	return worldPos;
 }
 
-void Enemy::OnCollision(const Player* player) { (void)player; }
+void Enemy::OnCollision(const Player* player) {
+	(void)player;
+	if (behavior_ == Behavior::kDeath) {
+		return;
+	}
+	if (player->IsAttack()) {
+		behaviorRequest_ = Behavior::kDeath;
+	}
+}
