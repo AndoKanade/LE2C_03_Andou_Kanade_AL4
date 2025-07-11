@@ -8,6 +8,12 @@ class Player;
 class Enemy {
 
 public:
+	enum class Behavior {
+		kIdle = -1,
+		kWalk,
+		kDeath,
+	};
+
 	void Initialize(Model* model, Camera* camera, const Vector3& position);
 
 	void Update();
@@ -19,6 +25,10 @@ public:
 	Vector3 GetWorldPosition();
 
 	void OnCollision(const Player* player);
+
+	bool IsDead() const { return isDead_; }
+
+	bool IsCollisionDisabled() const { return isCollisionDisabled_; }
 
 private:
 	WorldTransform worldTransform_;
@@ -41,4 +51,17 @@ private:
 
 	static inline const float kWidth = 0.8f;
 	static inline const float kHeight = 0.8f;
+
+	bool isDead_ = false;
+
+	Behavior behavior_ = Behavior::kWalk;
+
+	Behavior behaviorRequest_ = Behavior::kIdle;
+
+	static inline const float kDefeatedTime = 0.6f;
+	static inline const float kDefeatedMotionAngleStart = 0.0f;
+	static inline const float kDefeatedMotionAngleEnd = -60.0f;
+	float counter_ = 0.0f;
+
+	bool isCollisionDisabled_ = false;
 };

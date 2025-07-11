@@ -64,6 +64,8 @@ public:
 
 	void BehaviorAttackInitialize();
 
+	bool IsAttack() const { return behavior_ == Behavior::kAttack; }
+
 private:
 	// ワールド変換データ
 	WorldTransform worldTransform_;
@@ -129,4 +131,6 @@ private:
 	WorldTransform worldTransformAttack_;
 
 	Model* modelAttack_ = nullptr;
+
+	bool isCollisionDisabled_ = false;
 };

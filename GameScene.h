@@ -2,6 +2,7 @@
 #include "CameraController.h"
 #include "DeathParticles.h"
 #include "Enemy.h"
+#include "Fade.h"
 #include "KamataEngine.h"
 #include "MapChipField.h"
 #include "Math.h"
@@ -27,8 +28,10 @@ public:
 
 private:
 	enum class Phase {
+		kFadeIn,
 		kPlay,
 		kDeath,
+		kFadeOut,
 	};
 	Phase phase_;
 
@@ -60,4 +63,6 @@ private:
 	Model* deathParticle_model_ = nullptr;
 
 	bool finished_ = false;
+
+	Fade* fade_ = nullptr;
 };
