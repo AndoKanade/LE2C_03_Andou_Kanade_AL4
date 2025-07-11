@@ -131,4 +131,6 @@ private:
 	WorldTransform worldTransformAttack_;
 
 	Model* modelAttack_ = nullptr;
+
+	bool isCollisionDisabled_ = false;
 };
