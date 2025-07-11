@@ -28,13 +28,7 @@ public:
 
 	bool IsDead() const { return isDead_; }
 
-	void BehaviorRootUpdate();
-
-	void BehaviorDeathUpdate();
-
-	void BehaviorRootInitialize();
-
-	void BehaviorDeathInitialize();
+	bool IsCollisionDisabled() const { return isCollisionDisabled_; }
 
 private:
 	WorldTransform worldTransform_;
@@ -63,4 +57,11 @@ private:
 	Behavior behavior_ = Behavior::kWalk;
 
 	Behavior behaviorRequest_ = Behavior::kIdle;
+
+	static inline const float kDefeatedTime = 0.6f;
+	static inline const float kDefeatedMotionAngleStart = 0.0f;
+	static inline const float kDefeatedMotionAngleEnd = -60.0f;
+	float counter_ = 0.0f;
+
+	bool isCollisionDisabled_ = false;
 };
