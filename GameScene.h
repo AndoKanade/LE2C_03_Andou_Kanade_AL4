@@ -3,6 +3,7 @@
 #include "DeathParticles.h"
 #include "Enemy.h"
 #include "Fade.h"
+#include "HitEffect.h"
 #include "KamataEngine.h"
 #include "MapChipField.h"
 #include "Math.h"
@@ -25,6 +26,9 @@ public:
 	void CheckAllCollisions();
 
 	bool IsFinished() const { return finished_; }
+
+	void CreateEffect(const KamataEngine::Vector3& position);
+
 
 private:
 	enum class Phase {
@@ -49,18 +53,21 @@ private:
 	Player* player_ = nullptr;
 	Skydome* skydome_ = nullptr;
 	Model* modelSkydome_ = nullptr;
-	Model* playerModel_ = nullptr;
+	Model* modelPlayer_ = nullptr;
 	Model* modelPlayerAttack_ = nullptr;
+	Model* modelParticle_ = nullptr;
+	Model* modelDeathParticle_ = nullptr;
 
 	MapChipField* mapChipField_;
 
 	CameraController* cameraController_ = nullptr;
 	Enemy* enemy_ = nullptr;
-	KamataEngine::Model* enemy_model_ = nullptr;
+	KamataEngine::Model* modelEnemy_ = nullptr;
 
 	std::list<Enemy*> enemies_;
 	DeathParticles* deathParticles_ = nullptr;
-	Model* deathParticle_model_ = nullptr;
+
+	std::list<HitEffect*> hitEffects_;
 
 	bool finished_ = false;
 

@@ -49,6 +49,7 @@ public:
 	void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
 
 	Vector3 GetWorldPosition();
+	Vector3 GetWorldPosition()const;
 
 	AABB GetAABB();
 

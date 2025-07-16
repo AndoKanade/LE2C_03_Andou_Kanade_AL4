@@ -4,6 +4,7 @@
 
 using namespace KamataEngine;
 class Player;
+class GameScene;
 
 class Enemy {
 
@@ -25,6 +26,8 @@ public:
 	Vector3 GetWorldPosition();
 
 	void OnCollision(const Player* player);
+
+	void SetGameScene(GameScene* gameScene) { gameScene_ = gameScene; }
 
 	bool IsDead() const { return isDead_; }
 
@@ -64,4 +67,6 @@ private:
 	float counter_ = 0.0f;
 
 	bool isCollisionDisabled_ = false;
+
+	GameScene* gameScene_ = nullptr;
 };

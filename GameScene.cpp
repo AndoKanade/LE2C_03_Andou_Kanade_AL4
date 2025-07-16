@@ -4,27 +4,32 @@
 using namespace KamataEngine;
 
 GameScene::~GameScene() {
-	delete model_;
-	delete modelBlock_;
-	delete playerModel_;
-	delete modelPlayerAttack_;
-	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
-		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
-			delete worldTransformBlock;
-		}
-	}
 
-	worldTransformBlocks_.clear();
-
-	delete debugCamera_;
-	delete modelSkydome_;
-	delete mapChipField_;
+	delete deathParticles_;
 	for (Enemy* enemy : enemies_) {
 		delete enemy;
 	}
-
-	delete deathParticles_;
-	delete deathParticle_model_;
+	for (HitEffect* hitEffect : hitEffects_) {
+		delete hitEffect;
+	}
+	delete player_;
+	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
+		for (WorldTransform*& worldTransformBlock : worldTransformBlockLine) {
+			delete worldTransformBlock;
+			worldTransformBlock = nullptr;
+		}
+	}
+	delete modelParticle_;
+	delete modelDeathParticle_;
+	delete modelEnemy_;
+	delete modelPlayer_;
+	delete modelPlayerAttack_;
+	delete modelBlock_;
+	delete debugCamera_;
+	delete modelSkydome_;
+	delete mapChipField_;
+	delete cameraController_;
+	delete fade_;
 }
 void GameScene::Initialize() {
 	// ここにインゲームの初期化処理を書く
@@ -39,14 +44,14 @@ void GameScene::Initialize() {
 	player_ = new Player();
 
 	// プレイヤーモデル
-	playerModel_ = Model::CreateFromOBJ("player");
+	modelPlayer_ = Model::CreateFromOBJ("player");
 	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(2, 18);
 
 	modelPlayerAttack_ = Model::CreateFromOBJ("attack_effect");
 
 	player_->SetMapChipField(mapChipField_);
 
-	player_->Initialize(playerModel_, modelPlayerAttack_, &camera_, playerPosition);
+	player_->Initialize(modelPlayer_, modelPlayerAttack_, &camera_, playerPosition);
 	// worldTransform_.Initialize();
 
 	camera_.farZ = 1000.0f; // カメラの遠くの描画距離
@@ -68,18 +73,22 @@ void GameScene::Initialize() {
 	CameraController::Rect cameraArea = {12.0f, 100 - 12.0f, 6.0f, 6.0f};
 	cameraController_->SetMovableArea(cameraArea);
 
-	enemy_model_ = Model::CreateFromOBJ("enemy");
+	modelEnemy_ = Model::CreateFromOBJ("enemy");
 
 	for (int32_t i = 0; i < 2; i++) {
 		Enemy* newEnemy = new Enemy();
 		Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(14 + i * 2, 18);
-		newEnemy->Initialize(enemy_model_, &camera_, enemyPosition);
+		newEnemy->Initialize(modelEnemy_, &camera_, enemyPosition);
 		enemies_.push_back(newEnemy);
 	}
 
-	deathParticle_model_ = Model::CreateFromOBJ("deathParticle");
+	modelDeathParticle_ = Model::CreateFromOBJ("deathParticle");
 
 	phase_ = Phase::kPlay;
+
+	modelParticle_ = Model::CreateFromOBJ("particle");
+	HitEffect::SetModel(modelParticle_);
+	HitEffect::SetCamera(&camera_);
 }
 
 void GameScene::ChangePhase() {
@@ -95,7 +104,7 @@ void GameScene::ChangePhase() {
 			const Vector3& deathParticlesPosition = player_->GetWorldPosition();
 
 			deathParticles_ = new DeathParticles;
-			deathParticles_->Initialize(deathParticle_model_, &camera_, deathParticlesPosition);
+			deathParticles_->Initialize(modelDeathParticle_, &camera_, deathParticlesPosition);
 		}
 		break;
 	case Phase::kDeath:
@@ -161,6 +170,10 @@ void GameScene::Update() {
 			enemy->Update();
 		}
 
+		for (HitEffect* hitEffect : hitEffects_) {
+			hitEffect->Update();
+		}
+
 		// UpdateCamera();
 #ifdef _DEBUG
 		if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
@@ -206,7 +219,9 @@ void GameScene::Update() {
 		for (Enemy* enemy : enemies_) {
 			enemy->Update();
 		}
-
+		for (HitEffect* hitEffect : hitEffects_) {
+			hitEffect->Update();
+		}
 		//		UpdateCamera();
 		/*
 		#ifdef _DEBUG
@@ -256,6 +271,10 @@ void GameScene::Update() {
 			enemy->Update();
 		}
 
+		for (HitEffect* hitEffect : hitEffects_) {
+			hitEffect->Update();
+		}
+
 		if (deathParticles_) {
 			deathParticles_->Update();
 		}
@@ -265,6 +284,10 @@ void GameScene::Update() {
 		fade_->Update();
 		if (fade_->IsFinished()) {
 			finished_ = true;
+		}
+
+		for (HitEffect* hitEffect : hitEffects_) {
+			hitEffect->Update();
 		}
 
 		skydome_->Update();
@@ -317,6 +340,10 @@ void GameScene::Draw() {
 	// スプライト描画前処理
 	Sprite::PreDraw(dxCommon->GetCommandList());
 
+	for (HitEffect* hitEffect : hitEffects_) {
+		hitEffect->Draw();
+	}
+
 	// スプライト描画後処理
 	Sprite::PostDraw();
 }
@@ -351,4 +378,9 @@ void GameScene::CheckAllCollisions() {
 		}
 	}
 #pragma endregion
+}
+
+void GameScene::CreateEffect(const KamataEngine::Vector3& position) {
+	HitEffect* newHitEffect = HitEffect::Create(position);
+	hitEffects_.push_back(newHitEffect);
 }
