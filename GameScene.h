@@ -29,7 +29,6 @@ public:
 
 	void CreateEffect(const KamataEngine::Vector3& position);
 
-
 private:
 	enum class Phase {
 		kFadeIn,
@@ -41,6 +40,7 @@ private:
 
 	void ChangePhase();
 
+	KamataEngine::Sprite* sprite_ = nullptr;
 	KamataEngine::Model* model_ = nullptr;
 	KamataEngine::Model* modelBlock_ = nullptr;
 	bool isDebugCameraActive_ = false;

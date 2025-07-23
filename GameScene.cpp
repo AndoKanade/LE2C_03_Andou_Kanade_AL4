@@ -3,6 +3,11 @@
 
 using namespace KamataEngine;
 
+void GameScene::CreateEffect(const KamataEngine::Vector3& position) {
+	HitEffect* newHitEffect = HitEffect::Create(position);
+	hitEffects_.push_back(newHitEffect);
+}
+
 GameScene::~GameScene() {
 
 	delete deathParticles_;
@@ -222,15 +227,7 @@ void GameScene::Update() {
 		for (HitEffect* hitEffect : hitEffects_) {
 			hitEffect->Update();
 		}
-		//		UpdateCamera();
-		/*
-		#ifdef _DEBUG
-		        if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
-		            // フラグをトグル
-		            isDebugCameraActive_ = !isDebugCameraActive_;
-		        }
-		#endif
-		*/
+
 		// カメラの処理
 		if (isDebugCameraActive_) {
 			debugCamera_->Update();
@@ -378,9 +375,4 @@ void GameScene::CheckAllCollisions() {
 		}
 	}
 #pragma endregion
-}
-
-void GameScene::CreateEffect(const KamataEngine::Vector3& position) {
-	HitEffect* newHitEffect = HitEffect::Create(position);
-	hitEffects_.push_back(newHitEffect);
 }

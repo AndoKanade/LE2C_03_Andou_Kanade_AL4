@@ -112,16 +112,12 @@ void Enemy::OnCollision(const Player* player) {
 		return;
 	}
 
-	// プレイヤーが攻撃中なら敵が死ぬ
-	// player.hをインクルード
 	if (player->IsAttack()) {
-
 		if (gameScene_) {
+
 			Vector3 effectPos = (GetWorldPosition() + player->GetWorldPosition()) / 2.0f;
 			gameScene_->CreateEffect(effectPos);
 		}
-
-		// 敵の振るまいをやられに変更
 		behaviorRequest_ = Behavior::kDeath;
 
 		isCollisionDisabled_ = true;
