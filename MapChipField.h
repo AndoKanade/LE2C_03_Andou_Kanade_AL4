@@ -1,10 +1,8 @@
 #pragma once
-#include <KamataEngine.h>
-#include <cassert>
+
+#include "KamataEngine.h"
+#include "Math.h"
 #include <cstdint>
-#include <fstream>
-#include <map>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -21,11 +19,12 @@ struct MapChipData {
 
 class MapChipField {
 public:
+	// 02_07 スライド22枚目
 	struct IndexSet {
 		uint32_t xIndex;
 		uint32_t yIndex;
 	};
-
+	// 範囲矩形 02_07 スライド32枚目
 	struct Rect {
 		float left;   // 左端
 		float right;  // 右端
@@ -46,8 +45,9 @@ public:
 	uint32_t GetNumBlockVirtical() const { return kNumBlockVirtical; }
 	uint32_t GetNumBlockHorizontal() const { return kNumBlockHorizontal; }
 
+	// 02_07 スライド22枚目
 	IndexSet GetMapChipIndexSetByPosition(const Vector3& position);
-
+	// 02_07 スライド33枚目
 	Rect GetRectByIndex(uint32_t xIndex, uint32_t yIndex);
 
 private:

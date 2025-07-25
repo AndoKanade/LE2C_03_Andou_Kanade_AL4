@@ -41,6 +41,8 @@ Vector3 operator-(const Vector3& v);
 
 const Vector3 operator+(const Vector3& lhv, const Vector3& rhv);
 
+inline Vector3 operator/(const Vector3& v, float scalar) { return {v.x / scalar, v.y / scalar, v.z / scalar}; }
+
 Vector3 Lerp(const Vector3& v1, const Vector3& v2, float t);
 
 const Vector3 operator*(const Vector3& v1, const float f);

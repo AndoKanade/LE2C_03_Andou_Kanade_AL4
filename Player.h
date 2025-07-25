@@ -6,12 +6,10 @@ using namespace KamataEngine;
 
 class MapChipField;
 
-// 02_10 21枚目
 class Enemy;
 
 class Player {
 public:
-	// 左右
 	enum class LRDirection {
 		kRight,
 		kLeft,
@@ -21,25 +19,22 @@ public:
 
 	enum class Behavior {
 		kUnknown = -1,
-		kRoot,
-		kAttack,
+		kRoot,   // 通常状態
+		kAttack, // 攻撃中
 	};
 
 	enum class AttackPhase {
-		kUnknown = -1,
+		kUnknown = -1, // 無効な状態
 
 		kAnticipation, // 予備動作
 		kAction,       // 前進動作
 		kRecovery,     // 余韻動作
 	};
 
-	/// 初期化
 	void Initialize(Model* model, Model* modelAttack, Camera* camera, const Vector3& position);
 
-	/// 更新
 	void Update();
 
-	/// 描画
 	void Draw();
 
 	const WorldTransform& GetWorldTransform() const { return worldTransform_; }
@@ -48,7 +43,7 @@ public:
 
 	void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
 
-	Vector3 GetWorldPosition();
+	Vector3 GetWorldPosition() const;
 
 	AABB GetAABB();
 
@@ -64,14 +59,14 @@ public:
 
 	void BehaviorAttackInitialize();
 
-	bool IsAttack() const { return behavior_ == Behavior::kAttack; }
+	bool IsAttack() const { return behavior_ == Behavior::kAttack && attackPhase_ == AttackPhase::kAction; }
+
+	// 02_15
+	bool IsCollisionDisabled() const { return isCollisionDisabled_; }
 
 private:
-	// ワールド変換データ
 	WorldTransform worldTransform_;
-	// モデル
 	Model* model_ = nullptr;
-	// テクスチャハンドル
 	uint32_t textureHandle_ = 0u;
 	Camera* camera_ = nullptr;
 	Vector3 velocity_ = {};
@@ -124,13 +119,10 @@ private:
 	AttackPhase attackPhase_ = AttackPhase::kUnknown;
 
 	static inline const uint32_t kAnticipationTime = 8;
-
 	static inline const uint32_t kActionTime = 5;
-
 	static inline const uint32_t kRecoveryTime = 12;
+	Model* modelAttack_ = nullptr;
 	WorldTransform worldTransformAttack_;
 
-	Model* modelAttack_ = nullptr;
-
-	bool isCollisionDisabled_ = false;
+	bool isCollisionDisabled_ = false; // 衝突無効化
 };
