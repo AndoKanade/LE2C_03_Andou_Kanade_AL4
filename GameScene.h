@@ -6,19 +6,21 @@
 #include "HitEffect.h"
 #include "KamataEngine.h"
 #include "MapChipField.h"
-#include "Math.h"
 #include "Player.h"
-#include "Skydome.h"
+#include "skydome.h"
 #include <vector>
 
-// ゲームシーン
+// ゲームシーンクラス
 class GameScene {
 public:
 	~GameScene();
+	// 初期化
 	void Initialize();
 
+	// 更新
 	void Update();
 
+	// 描画
 	void Draw();
 
 	void GenerateBlocks();
@@ -27,49 +29,63 @@ public:
 
 	bool IsFinished() const { return finished_; }
 
-	void CreateEffect(const KamataEngine::Vector3& position);
+	// エフェクトを生成
+	void CreateEffect(const Vector3& position);
 
 private:
 	enum class Phase {
-		kFadeIn,
-		kPlay,
-		kDeath,
-		kFadeOut,
+		kFadeIn,  // フェードイン 02_13 28枚目で追加
+		kPlay,    // ゲームプレイ
+		kDeath,   // デス演出
+		kFadeOut, // フェードアウト 02_13 28枚目で追加
 	};
+
 	Phase phase_;
 
 	void ChangePhase();
 
+	uint32_t textureHandle_ = 0;
 	KamataEngine::Sprite* sprite_ = nullptr;
 	KamataEngine::Model* model_ = nullptr;
-	KamataEngine::Model* modelBlock_ = nullptr;
-	bool isDebugCameraActive_ = false;
-
 	KamataEngine::WorldTransform worldTransform_;
-	std::vector<std::vector<WorldTransform*>> worldTransformBlocks_;
 	KamataEngine::Camera camera_;
-	DebugCamera* debugCamera_ = nullptr;
+	uint32_t soundDataHandle_ = 0;
+	uint32_t voiceHandle_ = 0;
 
+	//  プレイヤー
 	Player* player_ = nullptr;
+	// プレイヤーモデル
+	KamataEngine::Model* modelPlayer_ = nullptr;
+
+	// ブロックモデル
+	KamataEngine::Model* modelBlock_ = nullptr;
+	std::vector<std::vector<WorldTransform*>> worldTransformBlocks_;
+
+	// デバッグカメラ有効
+	bool isDebugCameraActive_ = false;
+	// デバッグカメラ
+	KamataEngine::DebugCamera* debugCamera_ = nullptr;
+
 	Skydome* skydome_ = nullptr;
 	Model* modelSkydome_ = nullptr;
-	Model* modelPlayer_ = nullptr;
-	Model* modelPlayerAttack_ = nullptr;
-	Model* modelParticle_ = nullptr;
-	Model* modelDeathParticle_ = nullptr;
 
 	MapChipField* mapChipField_;
 
 	CameraController* cameraController_ = nullptr;
-	Enemy* enemy_ = nullptr;
+
 	KamataEngine::Model* modelEnemy_ = nullptr;
 
 	std::list<Enemy*> enemies_;
 	DeathParticles* deathParticles_ = nullptr;
 
-	std::list<HitEffect*> hitEffects_;
+	Model* modelDeathEffect_ = nullptr;
 
 	bool finished_ = false;
-
 	Fade* fade_ = nullptr;
+
+	Model* modelAttack_ = nullptr;
+
+	std::list<HitEffect*> hitEffects_;
+
+	Model* modelParticle_ = nullptr;
 };
