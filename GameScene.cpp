@@ -15,6 +15,7 @@ GameScene::~GameScene() {
 	delete model_;
 
 	delete modelBlock_;
+	delete modelItem_;
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
 			delete worldTransformBlock;
@@ -47,6 +48,7 @@ void GameScene::Initialize() {
 	camera_.Initialize();
 
 	modelBlock_ = Model::CreateFromOBJ("block");
+	modelItem_ = Model::CreateFromOBJ("item"); 
 
 	debugCamera_ = new DebugCamera(WinApp::kWindowWidth, WinApp::kWindowHeight);
 
@@ -62,7 +64,7 @@ void GameScene::Initialize() {
 	player_ = new Player();
 
 	modelPlayer_ = Model::CreateFromOBJ("player");
-	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(2, 18);
+	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(26, 18);
 	modelAttack_ = Model::CreateFromOBJ("attack_effect"); // 02_07 スライド5枚目
 	player_->SetMapChipField(mapChipField_);
 
@@ -139,6 +141,13 @@ void GameScene::GenerateBlocks() {
 				worldTransformBlocks_[i][j] = worldTransform;
 				worldTransformBlocks_[i][j]->translation_ = mapChipField_->GetMapChipPositionByIndex(j, i);
 			}
+			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kItem) {
+				WorldTransform* worldTransform = new WorldTransform();
+				worldTransform->Initialize();
+				worldTransformBlocks_[i][j] = worldTransform;
+				worldTransformBlocks_[i][j]->translation_ = mapChipField_->GetMapChipPositionByIndex(j, i);
+			}
+
 		}
 	}
 }

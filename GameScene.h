@@ -59,6 +59,7 @@ private:
 
 	// ブロックモデル
 	KamataEngine::Model* modelBlock_ = nullptr;
+	KamataEngine::Model* modelItem_ = nullptr;
 	std::vector<std::vector<WorldTransform*>> worldTransformBlocks_;
 
 	// デバッグカメラ有効
