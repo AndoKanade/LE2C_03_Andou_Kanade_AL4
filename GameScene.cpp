@@ -1,5 +1,5 @@
 #include "GameScene.h"
-#include "Math.h"
+#include "Math.h" 
 
 using namespace KamataEngine;
 void GameScene::CreateEffect(const Vector3& position) {
@@ -48,7 +48,7 @@ void GameScene::Initialize() {
 	camera_.Initialize();
 
 	modelBlock_ = Model::CreateFromOBJ("block");
-	modelItem_ = Model::CreateFromOBJ("item"); 
+	modelItem_ = Model::CreateFromOBJ("item");
 
 	debugCamera_ = new DebugCamera(WinApp::kWindowWidth, WinApp::kWindowHeight);
 
@@ -68,7 +68,10 @@ void GameScene::Initialize() {
 	modelAttack_ = Model::CreateFromOBJ("attack_effect"); // 02_07 スライド5枚目
 	player_->SetMapChipField(mapChipField_);
 
-	player_->Initialize(modelPlayer_, modelAttack_, &camera_, playerPosition);
+	modelItem_ = Model::CreateFromOBJ("item");
+	Vector3 itemPosition = mapChipField_->GetMapChipPositionByIndex(36, 18);
+
+	player_->Initialize(modelPlayer_, modelItem_, modelAttack_, &camera_, playerPosition, itemPosition);
 
 	cameraController_ = new CameraController(); // 生成
 	cameraController_->Initialize(&camera_);    // 初期化
@@ -77,17 +80,17 @@ void GameScene::Initialize() {
 
 	CameraController::Rect cameraArea = {12.0f, 100 - 12.0f, 6.0f, 6.0f};
 	cameraController_->SetMovableArea(cameraArea);
-	modelEnemy_ = Model::CreateFromOBJ("enemy");
-	for (int32_t i = 0; i < 2; ++i) {
-		Enemy* newEnemy = new Enemy();
+	// modelEnemy_ = Model::CreateFromOBJ("enemy");
+	// for (int32_t i = 0; i < 2; ++i) {
+	//	Enemy* newEnemy = new Enemy();
 
-		Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(30 + i * 2, 18);
+	//	Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(30 + i * 2, 18);
 
-		newEnemy->Initialize(modelEnemy_, &camera_, enemyPosition);
+	//	newEnemy->Initialize(modelEnemy_, &camera_, enemyPosition);
 
-		newEnemy->SetGameScene(this);
-		enemies_.push_back(newEnemy);
-	}
+	//	newEnemy->SetGameScene(this);
+	//	enemies_.push_back(newEnemy);
+	//}
 
 	modelDeathEffect_ = Model::CreateFromOBJ("deathParticle");
 
@@ -141,13 +144,6 @@ void GameScene::GenerateBlocks() {
 				worldTransformBlocks_[i][j] = worldTransform;
 				worldTransformBlocks_[i][j]->translation_ = mapChipField_->GetMapChipPositionByIndex(j, i);
 			}
-			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kItem) {
-				WorldTransform* worldTransform = new WorldTransform();
-				worldTransform->Initialize();
-				worldTransformBlocks_[i][j] = worldTransform;
-				worldTransformBlocks_[i][j]->translation_ = mapChipField_->GetMapChipPositionByIndex(j, i);
-			}
-
 		}
 	}
 }
@@ -310,6 +306,8 @@ void GameScene::Draw() {
 	if (!player_->IsDead())
 		player_->Draw();
 
+	player_->DrawItem();
+
 	// 天球描画
 	skydome_->Draw();
 
@@ -364,6 +362,25 @@ void GameScene::CheckAllCollisions() {
 			if (IsCollision(aabb1, aabb2)) {
 				player_->OnCollision(enemy);
 				enemy->OnCollision(player_);
+			}
+		}
+	}
+#pragma endregion
+
+#pragma region 自キャラとアイテムの当たり判定
+	{
+		aabb1 = player_->GetAABB();
+
+		for (Item* item : items_) {
+			if (item->IsCollisionDisabled())
+				continue;
+
+			aabb2 = item->GetAABB();
+
+			if (IsCollision(aabb1, aabb2)) {
+				player_->OnCollision(item);
+				item->OnCollision(player_);
+				std::cout << "Hit" << std::endl;
 			}
 		}
 	}

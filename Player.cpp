@@ -3,7 +3,7 @@
 #include "Player.h"
 #include "MapChipField.h"
 #include "Math.h"
-
+#include "item.h"
 #include <algorithm>
 #include <cassert>
 #include <numbers>
@@ -38,6 +38,7 @@ void Player::Update() {
 
 	WorldTransformUpdate(worldTransform_);
 	WorldTransformUpdate(worldTransformAttack_);
+	WorldTransformUpdate(worldTransformItem_);
 }
 
 void Player::BehaviorRootInitialize() {}
@@ -169,11 +170,18 @@ void Player::BehaviorAttackUpdate() {
 	worldTransformAttack_.rotation_ = worldTransform_.rotation_;
 }
 
-void Player::Initialize(Model* model, Model* modelAttack, Camera* camera, const Vector3& position) {
+void Player::Initialize(Model* model, Model* modelItem, Model* modelAttack, Camera* camera, const Vector3& position, const Vector3& itemPosition) {
 
 	assert(model);
 	// モデル
 	model_ = model;
+	assert(modelItem);
+
+	// アイテムモデル
+	modelItem_ = modelItem;
+	worldTransformItem_.Initialize();
+	worldTransformItem_.translation_ = itemPosition;
+
 	modelAttack_ = modelAttack;
 
 	worldTransform_.Initialize();
@@ -516,6 +524,8 @@ void Player::Draw() {
 	}
 }
 
+void Player::DrawItem() { modelItem_->Draw(worldTransformItem_, *camera_); }
+
 Vector3 Player::GetWorldPosition() const {
 
 	Vector3 worldPos;
@@ -550,4 +560,32 @@ void Player::OnCollision(const Enemy* enemy) {
 	isDead_ = true;
 
 	isCollisionDisabled_ = true; // 衝突無効化
+}
+// Player.cpp
+void Player::OnCollision(Item* item) {
+
+	(void)item;
+	// アイテムを取得したときの処理
+	isHitItem_ = true;
+	isDead_ = true;
+}
+
+void Player::IsHitItem(const Vector3& itemPosition) {
+	if (isCollisionDisabled_)
+		return;
+
+	Vector3 playerPos = GetWorldPosition();
+
+	// プレイヤーとアイテムの距離を計算
+	float dx = playerPos.x - itemPosition.x;
+	float dy = playerPos.y - itemPosition.y;
+	float dz = playerPos.z - itemPosition.z;
+	float distanceSq = dx * dx + dy * dy + dz * dz;
+
+	// 取得可能な半径（1マスの半分くらい）
+	float pickRadius = 0.5f;
+
+	if (distanceSq <= pickRadius * pickRadius) {
+		isHitItem_ = true;
+	}
 }

@@ -4,10 +4,13 @@
 #include "Enemy.h"
 #include "Fade.h"
 #include "HitEffect.h"
+#include "Item.h"
 #include "KamataEngine.h"
 #include "MapChipField.h"
 #include "Player.h"
 #include "skydome.h"
+#include <iostream>
+
 #include <vector>
 
 // ゲームシーンクラス
@@ -59,7 +62,10 @@ private:
 
 	// ブロックモデル
 	KamataEngine::Model* modelBlock_ = nullptr;
+	Player* item_ = nullptr;
 	KamataEngine::Model* modelItem_ = nullptr;
+	std::vector<Item*> items_; // 敵と同じように管理
+
 	std::vector<std::vector<WorldTransform*>> worldTransformBlocks_;
 
 	// デバッグカメラ有効
