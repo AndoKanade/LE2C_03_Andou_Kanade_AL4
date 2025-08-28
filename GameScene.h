@@ -62,9 +62,8 @@ private:
 
 	// ブロックモデル
 	KamataEngine::Model* modelBlock_ = nullptr;
-	Player* item_ = nullptr;
+	//Player* item_ = nullptr;
 	KamataEngine::Model* modelItem_ = nullptr;
-	std::vector<Item*> items_; // 敵と同じように管理
 
 	std::vector<std::vector<WorldTransform*>> worldTransformBlocks_;
 
@@ -81,6 +80,8 @@ private:
 	CameraController* cameraController_ = nullptr;
 
 	KamataEngine::Model* modelEnemy_ = nullptr;
+	KamataEngine::Model* modelEnemy2_ = nullptr;
+
 
 	std::list<Enemy*> enemies_;
 	DeathParticles* deathParticles_ = nullptr;

@@ -44,6 +44,7 @@ public:
 	const Vector3& GetVelocity() const { return velocity_; }
 
 	void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
+	void GetMapChipField(MapChipField** mapChipField) { *mapChipField = mapChipField_; }
 
 	Vector3 GetWorldPosition() const;
 
@@ -53,6 +54,9 @@ public:
 	void OnCollision(Item* item);
 
 	bool IsDead() const { return isDead_; }
+
+	bool CanICrear() const { return canICrear; }
+	bool CanICrear1() const { return canICrear1; }
 
 	void BehaviorRootUpdate();
 
@@ -137,4 +141,10 @@ private:
 	WorldTransform worldTransformAttack_;
 
 	bool isCollisionDisabled_ = false; // 衝突無効化
+
+	bool canICrear = false;
+	bool canICrear1 = false;
+
+	int counter;
+
 };

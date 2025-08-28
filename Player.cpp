@@ -557,7 +557,17 @@ void Player::OnCollision(const Enemy* enemy) {
 	// 不使用
 	(void)enemy;
 
-	isDead_ = true;
+	canICrear = true;
+
+	counter++;
+
+	if (canICrear) {
+		if (counter <= 300) {
+			canICrear1 = true;
+		}
+	}
+
+	// isDead_ = true;
 
 	isCollisionDisabled_ = true; // 衝突無効化
 }
@@ -566,8 +576,9 @@ void Player::OnCollision(Item* item) {
 
 	(void)item;
 	// アイテムを取得したときの処理
-	isHitItem_ = true;
-	isDead_ = true;
+	if (canICrear) {
+		canICrear1 = true;
+	}
 }
 
 void Player::IsHitItem(const Vector3& itemPosition) {

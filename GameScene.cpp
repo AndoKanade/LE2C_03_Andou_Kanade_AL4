@@ -1,5 +1,5 @@
 #include "GameScene.h"
-#include "Math.h" 
+#include "Math.h"
 
 using namespace KamataEngine;
 void GameScene::CreateEffect(const Vector3& position) {
@@ -68,8 +68,11 @@ void GameScene::Initialize() {
 	modelAttack_ = Model::CreateFromOBJ("attack_effect"); // 02_07 スライド5枚目
 	player_->SetMapChipField(mapChipField_);
 
-	modelItem_ = Model::CreateFromOBJ("item");
-	Vector3 itemPosition = mapChipField_->GetMapChipPositionByIndex(36, 18);
+	//modelItem_ = Model::CreateFromOBJ("item");
+	Vector3 itemPosition = mapChipField_->GetMapChipPositionByIndex(26, 18);
+
+	//Vector3 itemPos = mapChipField_->GetMapChipPositionByIndex(26, 18);
+	//goal_->Initialize(modelItem_, &camera_, itemPos);
 
 	player_->Initialize(modelPlayer_, modelItem_, modelAttack_, &camera_, playerPosition, itemPosition);
 
@@ -80,17 +83,23 @@ void GameScene::Initialize() {
 
 	CameraController::Rect cameraArea = {12.0f, 100 - 12.0f, 6.0f, 6.0f};
 	cameraController_->SetMovableArea(cameraArea);
-	// modelEnemy_ = Model::CreateFromOBJ("enemy");
-	// for (int32_t i = 0; i < 2; ++i) {
-	//	Enemy* newEnemy = new Enemy();
+	modelEnemy_ = Model::CreateFromOBJ("item");
+	modelEnemy2_ = Model::CreateFromOBJ("door");//
 
-	//	Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(30 + i * 2, 18);
+	Enemy* newEnemy = new Enemy();
 
-	//	newEnemy->Initialize(modelEnemy_, &camera_, enemyPosition);
+	Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(26, 18);
 
-	//	newEnemy->SetGameScene(this);
-	//	enemies_.push_back(newEnemy);
-	//}
+	newEnemy->Initialize(modelEnemy_, &camera_, enemyPosition);
+
+	newEnemy->SetGameScene(this);
+	enemies_.push_back(newEnemy);
+
+	Enemy* newEnemy2 = new Enemy();
+	Vector3 enemyPosition2 = mapChipField_->GetMapChipPositionByIndex(51, 9);
+	newEnemy2->Initialize(modelEnemy2_, &camera_, enemyPosition2);
+	newEnemy2->SetGameScene(this);
+	enemies_.push_back(newEnemy2);
 
 	modelDeathEffect_ = Model::CreateFromOBJ("deathParticle");
 
@@ -227,6 +236,8 @@ void GameScene::Update() {
 			enemy->Update();
 		}
 
+
+
 		// カメラの処理
 		if (isDebugCameraActive_) {
 			debugCamera_->Update();
@@ -248,6 +259,12 @@ void GameScene::Update() {
 
 				// アフィン変換～DirectXに転送
 				WorldTransformUpdate(*worldTransformBlock);
+			}
+		}
+
+		if (player_->CanICrear()) {
+			if (player_->CanICrear1()) {
+				phase_ = Phase::kFadeOut;
 			}
 		}
 
@@ -324,6 +341,8 @@ void GameScene::Draw() {
 		enemy->Draw();
 	}
 
+	//goal_->Draw();
+
 	if (deathParticles_) {
 		deathParticles_->Draw();
 	}
@@ -368,21 +387,7 @@ void GameScene::CheckAllCollisions() {
 #pragma endregion
 
 #pragma region 自キャラとアイテムの当たり判定
-	{
-		aabb1 = player_->GetAABB();
+	
 
-		for (Item* item : items_) {
-			if (item->IsCollisionDisabled())
-				continue;
-
-			aabb2 = item->GetAABB();
-
-			if (IsCollision(aabb1, aabb2)) {
-				player_->OnCollision(item);
-				item->OnCollision(player_);
-				std::cout << "Hit" << std::endl;
-			}
-		}
-	}
 #pragma endregion
 }
