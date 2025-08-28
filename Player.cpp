@@ -552,7 +552,7 @@ void Player::OnCollision(const Enemy* enemy) {
 	counter++;
 
 	if (canICrear) {
-		if (counter <= 1500) {
+		if (counter <= 3000) {
 			canICrear1 = true;
 		}
 	}

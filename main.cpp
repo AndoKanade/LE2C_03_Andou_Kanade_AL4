@@ -88,7 +88,7 @@ void DrawScene() {
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	// エンジンの初期化
-	KamataEngine::Initialize(L"LE2C_01_アンドウ_カナデ_AL3");
+	KamataEngine::Initialize(L"ゴールへGO");
 
 	// DirectXCommonインスタンスの取得
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();

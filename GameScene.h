@@ -78,7 +78,7 @@ private:
 
 	KamataEngine::Model* modelEnemy_ = nullptr;
 	KamataEngine::Model* modelEnemy2_ = nullptr;
-
+	KamataEngine::Model* modelEnemy3_ = nullptr;
 
 	std::list<Enemy*> enemies_;
 	DeathParticles* deathParticles_ = nullptr;
@@ -93,4 +93,6 @@ private:
 	std::list<HitEffect*> hitEffects_;
 
 	Model* modelParticle_ = nullptr;
+
+	Model* modelArrow_ = nullptr;
 };

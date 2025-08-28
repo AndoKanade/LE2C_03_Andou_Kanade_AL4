@@ -10,7 +10,7 @@ EndScene::~EndScene() {
 
 void EndScene::Initialize() {
 
-	modelTitle_ = Model::CreateFromOBJ("enemy", true);
+	modelTitle_ = Model::CreateFromOBJ("endFont", true);
 	modelPlayer_ = Model::CreateFromOBJ("player");
 
 	// カメラ初期化
