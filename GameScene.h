@@ -8,6 +8,8 @@
 #include "MapChipField.h"
 #include "Player.h"
 #include "skydome.h"
+#include <iostream>
+
 #include <vector>
 
 // ゲームシーンクラス
@@ -59,6 +61,7 @@ private:
 
 	// ブロックモデル
 	KamataEngine::Model* modelBlock_ = nullptr;
+
 	std::vector<std::vector<WorldTransform*>> worldTransformBlocks_;
 
 	// デバッグカメラ有効
@@ -74,6 +77,8 @@ private:
 	CameraController* cameraController_ = nullptr;
 
 	KamataEngine::Model* modelEnemy_ = nullptr;
+	KamataEngine::Model* modelEnemy2_ = nullptr;
+	KamataEngine::Model* modelEnemy3_ = nullptr;
 
 	std::list<Enemy*> enemies_;
 	DeathParticles* deathParticles_ = nullptr;
@@ -88,4 +93,6 @@ private:
 	std::list<HitEffect*> hitEffects_;
 
 	Model* modelParticle_ = nullptr;
+
+	Model* modelArrow_ = nullptr;
 };

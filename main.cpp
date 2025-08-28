@@ -1,18 +1,20 @@
 #include "GameScene.h"
 #include "KamataEngine.h"
 #include "TitleScene.h"
+#include "endScene.h"
 #include <Windows.h>
 
 using namespace KamataEngine;
 
 TitleScene* titleScene = nullptr;
 GameScene* gameScene = nullptr;
-
+EndScene* endScene = nullptr;
 
 enum class Scene {
 	kUnknown = 0,
 	kTitle,
 	kGame,
+	kEnd,
 };
 
 Scene scene = Scene::kUnknown;
@@ -31,15 +33,25 @@ void ChangeScene() {
 		}
 		break;
 	case Scene::kGame:
-	
+
 		if (gameScene->IsFinished()) {
 			// シーン変更
-			scene = Scene::kTitle;
+			scene = Scene::kEnd;
 			delete gameScene;
 			gameScene = nullptr;
+			endScene = new EndScene;
+			endScene->Initialize();
+		}
+		break;
+	case Scene::kEnd:
+		if (endScene->IsFinished()) {
+			scene = Scene::kTitle;
+			delete endScene;
+			endScene = nullptr;
 			titleScene = new TitleScene;
 			titleScene->Initialize();
 		}
+
 		break;
 	}
 }
@@ -53,6 +65,9 @@ void UpdateScene() {
 	case Scene::kGame:
 		gameScene->Update();
 		break;
+	case Scene::kEnd:
+		endScene->Update();
+		break;
 	}
 }
 void DrawScene() {
@@ -63,6 +78,9 @@ void DrawScene() {
 	case Scene::kGame:
 		gameScene->Draw();
 		break;
+	case Scene::kEnd:
+		endScene->Draw();
+		break;
 	}
 }
 
@@ -70,7 +88,7 @@ void DrawScene() {
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	// エンジンの初期化
-	KamataEngine::Initialize(L"LE2C_01_アンドウ_カナデ_AL3");
+	KamataEngine::Initialize(L"ゴールへGO");
 
 	// DirectXCommonインスタンスの取得
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
@@ -78,7 +96,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	// ImGuiManagerインスタンスの取得
 	ImGuiManager* imguiManager = ImGuiManager::GetInstance();
 
-	scene = Scene::kTitle; 
+	scene = Scene::kTitle;
 	titleScene = new TitleScene;
 	titleScene->Initialize();
 
@@ -93,9 +111,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		imguiManager->Begin();
 
 		// シーン切り替え
-		ChangeScene(); 
+		ChangeScene();
 		// シーン更新
-		UpdateScene(); 
+		UpdateScene();
 
 		// ImGui受付終了
 		imguiManager->End();
@@ -104,7 +122,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		dxCommon->PreDraw();
 
 		// シーンの描画
-		DrawScene(); 
+		DrawScene();
 
 		// 軸表示の描画
 		AxisIndicator::GetInstance()->Draw();
