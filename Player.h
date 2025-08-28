@@ -5,7 +5,6 @@
 using namespace KamataEngine;
 
 class MapChipField;
-class Item;
 class Enemy;
 
 class Player {
@@ -31,13 +30,11 @@ public:
 		kRecovery,     // 余韻動作
 	};
 
-	void Initialize(Model* model, Model* modelItem, Model* modelAttack, Camera* camera, const Vector3& position, const Vector3& itemPosition);
+	void Initialize(Model* model, Model* modelAttack, Camera* camera, const Vector3& position);
 
 	void Update();
 
 	void Draw();
-
-	void DrawItem();
 
 	const WorldTransform& GetWorldTransform() const { return worldTransform_; }
 
@@ -51,7 +48,6 @@ public:
 	AABB GetAABB();
 
 	void OnCollision(const Enemy* enemy);
-	void OnCollision(Item* item);
 
 	bool IsDead() const { return isDead_; }
 
@@ -66,10 +62,6 @@ public:
 
 	void BehaviorAttackInitialize();
 
-	void IsHitItem(const Vector3& itemPosition);
-
-	bool IsHitItem() const { return isHitItem_; }
-
 	bool IsAttack() const { return behavior_ == Behavior::kAttack && attackPhase_ == AttackPhase::kAction; }
 
 	// 02_15
@@ -78,10 +70,6 @@ public:
 private:
 	WorldTransform worldTransform_;
 	Model* model_ = nullptr;
-	Model* modelItem_ = nullptr;
-	WorldTransform worldTransformItem_;
-
-	bool isHitItem_ = false;
 
 	uint32_t textureHandle_ = 0u;
 	Camera* camera_ = nullptr;
@@ -146,5 +134,4 @@ private:
 	bool canICrear1 = false;
 
 	int counter;
-
 };

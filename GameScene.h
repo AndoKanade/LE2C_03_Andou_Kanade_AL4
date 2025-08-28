@@ -4,7 +4,6 @@
 #include "Enemy.h"
 #include "Fade.h"
 #include "HitEffect.h"
-#include "Item.h"
 #include "KamataEngine.h"
 #include "MapChipField.h"
 #include "Player.h"
@@ -62,8 +61,6 @@ private:
 
 	// ブロックモデル
 	KamataEngine::Model* modelBlock_ = nullptr;
-	//Player* item_ = nullptr;
-	KamataEngine::Model* modelItem_ = nullptr;
 
 	std::vector<std::vector<WorldTransform*>> worldTransformBlocks_;
 

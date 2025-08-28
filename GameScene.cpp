@@ -15,7 +15,6 @@ GameScene::~GameScene() {
 	delete model_;
 
 	delete modelBlock_;
-	delete modelItem_;
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
 			delete worldTransformBlock;
@@ -48,7 +47,7 @@ void GameScene::Initialize() {
 	camera_.Initialize();
 
 	modelBlock_ = Model::CreateFromOBJ("block");
-	modelItem_ = Model::CreateFromOBJ("item");
+
 
 	debugCamera_ = new DebugCamera(WinApp::kWindowWidth, WinApp::kWindowHeight);
 
@@ -68,13 +67,7 @@ void GameScene::Initialize() {
 	modelAttack_ = Model::CreateFromOBJ("attack_effect"); // 02_07 スライド5枚目
 	player_->SetMapChipField(mapChipField_);
 
-	//modelItem_ = Model::CreateFromOBJ("item");
-	Vector3 itemPosition = mapChipField_->GetMapChipPositionByIndex(26, 18);
-
-	//Vector3 itemPos = mapChipField_->GetMapChipPositionByIndex(26, 18);
-	//goal_->Initialize(modelItem_, &camera_, itemPos);
-
-	player_->Initialize(modelPlayer_, modelItem_, modelAttack_, &camera_, playerPosition, itemPosition);
+	player_->Initialize(modelPlayer_,  modelAttack_, &camera_, playerPosition);
 
 	cameraController_ = new CameraController(); // 生成
 	cameraController_->Initialize(&camera_);    // 初期化
@@ -323,7 +316,6 @@ void GameScene::Draw() {
 	if (!player_->IsDead())
 		player_->Draw();
 
-	player_->DrawItem();
 
 	// 天球描画
 	skydome_->Draw();
