@@ -8,7 +8,6 @@ using namespace KamataEngine;
 TitleScene* titleScene = nullptr;
 GameScene* gameScene = nullptr;
 
-
 enum class Scene {
 	kUnknown = 0,
 	kTitle,
@@ -31,7 +30,7 @@ void ChangeScene() {
 		}
 		break;
 	case Scene::kGame:
-	
+
 		if (gameScene->IsFinished()) {
 			// シーン変更
 			scene = Scene::kTitle;
@@ -78,7 +77,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	// ImGuiManagerインスタンスの取得
 	ImGuiManager* imguiManager = ImGuiManager::GetInstance();
 
-	scene = Scene::kTitle; 
+	scene = Scene::kTitle;
 	titleScene = new TitleScene;
 	titleScene->Initialize();
 
@@ -93,9 +92,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		imguiManager->Begin();
 
 		// シーン切り替え
-		ChangeScene(); 
+		ChangeScene();
 		// シーン更新
-		UpdateScene(); 
+		UpdateScene();
 
 		// ImGui受付終了
 		imguiManager->End();
@@ -104,7 +103,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		dxCommon->PreDraw();
 
 		// シーンの描画
-		DrawScene(); 
+		DrawScene();
 
 		// 軸表示の描画
 		AxisIndicator::GetInstance()->Draw();
