@@ -191,6 +191,8 @@ void Player::InputMove() {
 
 	if (onGround_) {
 
+		isHovering_ = false;
+
 		// 左右移動操作
 		if (Input::GetInstance()->PushKey(DIK_RIGHT) || Input::GetInstance()->PushKey(DIK_LEFT)) {
 
@@ -232,8 +234,6 @@ void Player::InputMove() {
 			velocity_.x = 0.0f;
 		}
 
-		isHovering_ = false;
-
 		if (Input::GetInstance()->PushKey(DIK_UP)) {
 			// ジャンプ初速
 			velocity_ += Vector3(0, kJumpAcceleration / 60.0f, 0);
@@ -241,15 +241,12 @@ void Player::InputMove() {
 	} else {
 		// ホバリングの処理
 
-		if (Input::GetInstance()->PushKey(DIK_UP)) {
-			if (!isHovering_) {
-				isHovering_ = true;
+		isHovering_ = true;
 
-				velocity_.y = std::clamp(velocity_.y, -kLimitFallSpeed, kLimitHoverRiseSpeed);
-			}
+		if (Input::GetInstance()->TriggerKey(DIK_UP)) {
 
-			velocity_ += Vector3(0, kHoverAcceleration / 60.0f, 0);
-			velocity_.y = std::clamp(velocity_.y, -kLimitHoverFallSpeed, kLimitHoverRiseSpeed);
+			velocity_.y += kHoverImpulse;
+			velocity_.y = std::min(velocity_.y, kLimitHoverImpulseSpeed);
 
 		} else {
 			isHovering_ = false;
@@ -258,6 +255,7 @@ void Player::InputMove() {
 			velocity_ += Vector3(0, -kGravityAcceleration / 60.0f, 0);
 			velocity_.y = std::max(velocity_.y, -kLimitFallSpeed);
 		}
+
 		if (Input::GetInstance()->PushKey(DIK_RIGHT)) {
 			velocity_.x += kAirControlAcceleration / 60.0f;
 		} else if (Input::GetInstance()->PushKey(DIK_LEFT)) {
@@ -266,7 +264,6 @@ void Player::InputMove() {
 
 		// 空中での左右速度の制限
 		velocity_.x = std::clamp(velocity_.x, -kLimitAirSpeed, kLimitAirSpeed);
-		// 非入力時の空中での左右減衰（あってもなくても良い）
 		velocity_.x *= (1.0f - kAirAttenuation);
 	}
 }

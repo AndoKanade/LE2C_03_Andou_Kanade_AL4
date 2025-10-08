@@ -131,9 +131,11 @@ private:
 	bool isHovering_ = false;
 
 	const float kHoverAcceleration = kGravityAcceleration * 1.5f;
-	const float kLimitHoverRiseSpeed = 2.0f;
-	const float kLimitHoverFallSpeed = 1.0f;
 	const float kAirControlAcceleration = kAcceleration * 0.5f;
 	const float kLimitAirSpeed = kLimitRunSpeed * 0.7f;
 	const float kAirAttenuation = 0.02f;
+
+	// もしtriggerで作るなら必要
+	const float kHoverImpulse = 25.0f;
+	const float kLimitHoverImpulseSpeed = kJumpAcceleration / 60.0f;
 };
