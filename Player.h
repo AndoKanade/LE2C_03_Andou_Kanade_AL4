@@ -130,8 +130,22 @@ private:
 
 	bool isCollisionDisabled_ = false; // 衝突無効化
 
+	// ホバリングの変数(仮)
+
+	bool isHovering_ = false;
+
+	const float kHoverAcceleration = kGravityAcceleration * 1.5f;
+	const float kAirControlAcceleration = kAcceleration * 0.5f;
+	const float kLimitAirSpeed = kLimitRunSpeed * 0.7f;
+	const float kAirAttenuation = 0.02f;
+
+	// もしtriggerで作るなら必要
+	const float kHoverImpulse = 25.0f;
+	const float kLimitHoverImpulseSpeed = kJumpAcceleration / 60.0f;
+
 	bool canICrear = false;
 	bool canICrear1 = false;
 
 	int counter;
+
 };

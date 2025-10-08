@@ -190,6 +190,8 @@ void Player::InputMove() {
 
 	if (onGround_) {
 
+		isHovering_ = false;
+
 		// 左右移動操作
 		if (Input::GetInstance()->PushKey(DIK_RIGHT) || Input::GetInstance()->PushKey(DIK_LEFT)) {
 
@@ -236,9 +238,42 @@ void Player::InputMove() {
 			velocity_ += Vector3(0, kJumpAcceleration / 60.0f, 0);
 		}
 	} else {
-		// 落下速度
-		velocity_ += Vector3(0, -kGravityAcceleration / 60.0f, 0);
-		velocity_.y = std::max(velocity_.y, -kLimitFallSpeed);
+		// ホバリングの処理
+
+		isHovering_ = true;
+
+		if (Input::GetInstance()->TriggerKey(DIK_UP)) {
+
+			velocity_.y += kHoverImpulse;
+			velocity_.y = std::min(velocity_.y, kLimitHoverImpulseSpeed);
+
+		} else {
+			isHovering_ = false;
+
+			// 通常の落下速度
+			velocity_ += Vector3(0, -kGravityAcceleration / 60.0f, 0);
+			velocity_.y = std::max(velocity_.y, -kLimitFallSpeed);
+		}
+
+		if (Input::GetInstance()->PushKey(DIK_RIGHT)) {
+			velocity_.x += kAirControlAcceleration / 60.0f;
+			if (lrDirection_ != LRDirection::kRight) {
+				lrDirection_ = LRDirection::kRight;
+				turnFirstRotationY_ = worldTransform_.rotation_.y;
+				turnTimer_ = kTimeTurn;
+			}
+		} else if (Input::GetInstance()->PushKey(DIK_LEFT)) {
+			velocity_.x -= kAirControlAcceleration / 60.0f;
+			if (lrDirection_ != LRDirection::kLeft) {
+				lrDirection_ = LRDirection::kLeft;
+				turnFirstRotationY_ = worldTransform_.rotation_.y;
+				turnTimer_ = kTimeTurn;
+			}
+		}
+
+		// 空中での左右速度の制限
+		velocity_.x = std::clamp(velocity_.x, -kLimitAirSpeed, kLimitAirSpeed);
+		velocity_.x *= (1.0f - kAirAttenuation);
 	}
 }
 

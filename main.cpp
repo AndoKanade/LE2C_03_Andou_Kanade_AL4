@@ -10,6 +10,7 @@ TitleScene* titleScene = nullptr;
 GameScene* gameScene = nullptr;
 EndScene* endScene = nullptr;
 
+
 enum class Scene {
 	kUnknown = 0,
 	kTitle,
@@ -88,13 +89,19 @@ void DrawScene() {
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	// エンジンの初期化
-	KamataEngine::Initialize(L"ゴールへGO");
+	KamataEngine::Initialize(L"LE2C_03_アンドウ_カナデ_AL4");
+
 
 	// DirectXCommonインスタンスの取得
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 
 	// ImGuiManagerインスタンスの取得
 	ImGuiManager* imguiManager = ImGuiManager::GetInstance();
+
+	Audio* audio = Audio::GetInstance();
+
+	audio->Initialize();
+
 
 	scene = Scene::kTitle;
 	titleScene = new TitleScene;
