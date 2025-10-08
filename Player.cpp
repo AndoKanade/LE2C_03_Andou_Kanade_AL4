@@ -258,8 +258,18 @@ void Player::InputMove() {
 
 		if (Input::GetInstance()->PushKey(DIK_RIGHT)) {
 			velocity_.x += kAirControlAcceleration / 60.0f;
+			if (lrDirection_ != LRDirection::kRight) {
+				lrDirection_ = LRDirection::kRight;
+				turnFirstRotationY_ = worldTransform_.rotation_.y;
+				turnTimer_ = kTimeTurn;
+			}
 		} else if (Input::GetInstance()->PushKey(DIK_LEFT)) {
 			velocity_.x -= kAirControlAcceleration / 60.0f;
+			if (lrDirection_ != LRDirection::kLeft) {
+				lrDirection_ = LRDirection::kLeft;
+				turnFirstRotationY_ = worldTransform_.rotation_.y;
+				turnTimer_ = kTimeTurn;
+			}
 		}
 
 		// 空中での左右速度の制限
