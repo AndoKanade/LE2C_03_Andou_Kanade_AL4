@@ -241,7 +241,7 @@ void Player::InputMove() {
 	} else {
 		// ホバリングの処理
 
-		if (Input::GetInstance()->TriggerKey(DIK_UP)) {
+		if (Input::GetInstance()->PushKey(DIK_UP)) {
 			if (!isHovering_) {
 				isHovering_ = true;
 
@@ -250,7 +250,6 @@ void Player::InputMove() {
 
 			velocity_ += Vector3(0, kHoverAcceleration / 60.0f, 0);
 			velocity_.y = std::clamp(velocity_.y, -kLimitHoverFallSpeed, kLimitHoverRiseSpeed);
-
 
 		} else {
 			isHovering_ = false;
