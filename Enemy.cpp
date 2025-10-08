@@ -52,13 +52,13 @@ void Enemy::Update() {
 	// 歩行
 	case Behavior::kWalk:
 		// 02_09 16枚目 移動
-		worldTransform_.translation_ += velocity_;
+		// worldTransform_.translation_ += velocity_;
 
 		// 02_09 20枚目
-		walkTimer += 1.0f / 60.0f;
+		// walkTimer += 1.0f / 60.0f;
 
 		// 02_09 23枚目 回転アニメーション
-		worldTransform_.rotation_.x = std::sin(std::numbers::pi_v<float> * 2.0f * walkTimer / kWalkMotionTime);
+		// worldTransform_.rotation_.x = std::sin(std::numbers::pi_v<float> * 2.0f * walkTimer / kWalkMotionTime);
 
 		// 02_09 スライド8枚目 ワールド行列更新
 		WorldTransformUpdate(worldTransform_);
@@ -66,16 +66,16 @@ void Enemy::Update() {
 	// やられ
 	case Behavior::kDefeated:
 		// 02_15 15枚目
-		counter_ += 1.0f / 60.0f;
+	//	counter_ += 1.0f / 60.0f;
 
-		worldTransform_.rotation_.y += 0.3f;
-		worldTransform_.rotation_.x = EaseOut(ToRadians(kDefeatedMotionAngleStart), ToRadians(kDefeatedMotionAngleEnd), counter_ / kDefeatedTime);
+		//worldTransform_.rotation_.y += 0.3f;
+		//worldTransform_.rotation_.x = EaseOut(ToRadians(kDefeatedMotionAngleStart), ToRadians(kDefeatedMotionAngleEnd), counter_ / kDefeatedTime);
 
-		WorldTransformUpdate(worldTransform_);
+		//WorldTransformUpdate(worldTransform_);
 
-		if (counter_ >= kDefeatedTime) {
+	//	if (counter_ >= kDefeatedTime) {
 			isDead_ = true;
-		}
+	//	}
 		break;
 	}
 }
@@ -116,9 +116,6 @@ Vector3 Enemy::GetWorldPosition() {
 // 02_10 スライド20枚目
 void Enemy::OnCollision(const Player* player) {
 
-	// 02_15 6枚目 → 14枚目で削除
-	//	isDead_ = true;
-
 	if (behavior_ == Behavior::kDefeated) {
 		// 敵がやられているなら何もしない
 		return;
@@ -126,23 +123,21 @@ void Enemy::OnCollision(const Player* player) {
 
 	// プレイヤーが攻撃中なら敵が死ぬ
 	// player.hをインクルード
-	if (player->IsAttack()) {
-		if (gameScene_) {
+	if (gameScene_) {
 
-			Vector3 pos = player->GetWorldPosition();
+		Vector3 pos = player->GetWorldPosition();
 
-			// 敵と自キャラの中間位置にエフェクトを生成
-			Vector3 effectPos;
+		// 敵と自キャラの中間位置にエフェクトを生成
+		Vector3 effectPos;
 
-			effectPos.x = (GetWorldPosition() + pos).x / 2.0f;
-			effectPos.y = (GetWorldPosition() + pos).y / 2.0f;
-			effectPos.z = (GetWorldPosition() + pos).z / 2.0f;
-			gameScene_->CreateEffect(effectPos);
-		}
-		// 敵の振るまいをやられに変更
-		behaviorRequest_ = Behavior::kDefeated;
-
-		// 02_15 20枚目 衝突を無効化
-		isCollisionDisabled_ = true;
+		effectPos.x = (GetWorldPosition() + pos).x / 2.0f;
+		effectPos.y = (GetWorldPosition() + pos).y / 2.0f;
+		effectPos.z = (GetWorldPosition() + pos).z / 2.0f;
+		gameScene_->CreateEffect(effectPos);
 	}
+	// 敵の振るまいをやられに変更
+	behaviorRequest_ = Behavior::kDefeated;
+
+	// 02_15 20枚目 衝突を無効化
+	isCollisionDisabled_ = true;
 }

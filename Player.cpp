@@ -3,7 +3,6 @@
 #include "Player.h"
 #include "MapChipField.h"
 #include "Math.h"
-
 #include <algorithm>
 #include <cassert>
 #include <numbers>
@@ -169,7 +168,7 @@ void Player::BehaviorAttackUpdate() {
 	worldTransformAttack_.rotation_ = worldTransform_.rotation_;
 }
 
-void Player::Initialize(Model* model, Model* modelAttack, Camera* camera, const Vector3& position) {
+void Player::Initialize(Model* model,  Model* modelAttack, Camera* camera, const Vector3& position) {
 
 	assert(model);
 	// モデル
@@ -551,6 +550,7 @@ void Player::Draw() {
 	}
 }
 
+
 Vector3 Player::GetWorldPosition() const {
 
 	Vector3 worldPos;
@@ -582,7 +582,18 @@ void Player::OnCollision(const Enemy* enemy) {
 	// 不使用
 	(void)enemy;
 
-	isDead_ = true;
+	canICrear = true;
+
+	counter++;
+
+	if (canICrear) {
+		if (counter <= 3000) {
+			canICrear1 = true;
+		}
+	}
+
+	// isDead_ = true;
 
 	isCollisionDisabled_ = true; // 衝突無効化
 }
+

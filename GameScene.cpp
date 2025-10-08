@@ -13,6 +13,7 @@ GameScene::~GameScene() {
 
 	delete sprite_;
 	delete model_;
+	delete modelArrow_;
 
 	delete modelBlock_;
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
@@ -39,6 +40,10 @@ GameScene::~GameScene() {
 
 void GameScene::Initialize() {
 
+	modelArrow_ = Model::CreateFromOBJ("arrow");
+
+	Vector3 arrowPosition = mapChipField_->GetMapChipPositionByIndex(26, 9);
+
 	textureHandle_ = TextureManager::Load("sample.png");
 	sprite_ = Sprite::Create(textureHandle_, {100, 50});
 	model_ = Model::Create();
@@ -62,7 +67,7 @@ void GameScene::Initialize() {
 	player_ = new Player();
 
 	modelPlayer_ = Model::CreateFromOBJ("player");
-	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(2, 18);
+	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(26, 18);
 	modelAttack_ = Model::CreateFromOBJ("attack_effect"); // 02_07 スライド5枚目
 	player_->SetMapChipField(mapChipField_);
 
@@ -75,17 +80,30 @@ void GameScene::Initialize() {
 
 	CameraController::Rect cameraArea = {12.0f, 100 - 12.0f, 6.0f, 6.0f};
 	cameraController_->SetMovableArea(cameraArea);
-	modelEnemy_ = Model::CreateFromOBJ("enemy");
-	for (int32_t i = 0; i < 2; ++i) {
-		Enemy* newEnemy = new Enemy();
+	modelEnemy_ = Model::CreateFromOBJ("item");
+	modelEnemy2_ = Model::CreateFromOBJ("door"); //
+	modelEnemy3_ = Model::CreateFromOBJ("arrow");
 
-		Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(30 + i * 2, 18);
+	Enemy* newEnemy = new Enemy();
 
-		newEnemy->Initialize(modelEnemy_, &camera_, enemyPosition);
+	Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(26, 18);
 
-		newEnemy->SetGameScene(this);
-		enemies_.push_back(newEnemy);
-	}
+	newEnemy->Initialize(modelEnemy_, &camera_, enemyPosition);
+
+	newEnemy->SetGameScene(this);
+	enemies_.push_back(newEnemy);
+
+	Enemy* newEnemy2 = new Enemy();
+	Vector3 enemyPosition2 = mapChipField_->GetMapChipPositionByIndex(50, 9);
+	newEnemy2->Initialize(modelEnemy2_, &camera_, enemyPosition2);
+	newEnemy2->SetGameScene(this);
+	enemies_.push_back(newEnemy2);
+
+	Enemy* newEnemy3 = new Enemy();
+	Vector3 enemyPosition3 = mapChipField_->GetMapChipPositionByIndex(26, 11);
+	newEnemy3->Initialize(modelEnemy3_, &camera_, enemyPosition3);
+	newEnemy3->SetGameScene(this);
+	enemies_.push_back(newEnemy3);
 
 	modelDeathEffect_ = Model::CreateFromOBJ("deathParticle");
 
@@ -207,6 +225,7 @@ void GameScene::Update() {
 				WorldTransformUpdate(*worldTransformBlock);
 			}
 		}
+		Vector3 arrowPosition = mapChipField_->GetMapChipPositionByIndex(26, 9);
 
 		for (HitEffect* hitEffect : hitEffects_) {
 			hitEffect->Update();
@@ -243,6 +262,12 @@ void GameScene::Update() {
 
 				// アフィン変換～DirectXに転送
 				WorldTransformUpdate(*worldTransformBlock);
+			}
+		}
+
+		if (player_->CanICrear()) {
+			if (player_->CanICrear1()) {
+				phase_ = Phase::kFadeOut;
 			}
 		}
 
@@ -317,6 +342,7 @@ void GameScene::Draw() {
 		enemy->Draw();
 	}
 
+
 	if (deathParticles_) {
 		deathParticles_->Draw();
 	}
@@ -358,5 +384,9 @@ void GameScene::CheckAllCollisions() {
 			}
 		}
 	}
+#pragma endregion
+
+#pragma region 自キャラとアイテムの当たり判定
+
 #pragma endregion
 }

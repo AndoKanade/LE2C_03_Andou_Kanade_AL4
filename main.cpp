@@ -1,17 +1,21 @@
 #include "GameScene.h"
 #include "KamataEngine.h"
 #include "TitleScene.h"
+#include "endScene.h"
 #include <Windows.h>
 
 using namespace KamataEngine;
 
 TitleScene* titleScene = nullptr;
 GameScene* gameScene = nullptr;
+EndScene* endScene = nullptr;
+
 
 enum class Scene {
 	kUnknown = 0,
 	kTitle,
 	kGame,
+	kEnd,
 };
 
 Scene scene = Scene::kUnknown;
@@ -33,12 +37,22 @@ void ChangeScene() {
 
 		if (gameScene->IsFinished()) {
 			// シーン変更
-			scene = Scene::kTitle;
+			scene = Scene::kEnd;
 			delete gameScene;
 			gameScene = nullptr;
+			endScene = new EndScene;
+			endScene->Initialize();
+		}
+		break;
+	case Scene::kEnd:
+		if (endScene->IsFinished()) {
+			scene = Scene::kTitle;
+			delete endScene;
+			endScene = nullptr;
 			titleScene = new TitleScene;
 			titleScene->Initialize();
 		}
+
 		break;
 	}
 }
@@ -52,6 +66,9 @@ void UpdateScene() {
 	case Scene::kGame:
 		gameScene->Update();
 		break;
+	case Scene::kEnd:
+		endScene->Update();
+		break;
 	}
 }
 void DrawScene() {
@@ -62,6 +79,9 @@ void DrawScene() {
 	case Scene::kGame:
 		gameScene->Draw();
 		break;
+	case Scene::kEnd:
+		endScene->Draw();
+		break;
 	}
 }
 
@@ -70,6 +90,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	// エンジンの初期化
 	KamataEngine::Initialize(L"LE2C_03_アンドウ_カナデ_AL4");
+
 
 	// DirectXCommonインスタンスの取得
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
@@ -80,6 +101,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	Audio* audio = Audio::GetInstance();
 
 	audio->Initialize();
+
 
 	scene = Scene::kTitle;
 	titleScene = new TitleScene;
