@@ -265,11 +265,11 @@ void GameScene::Update() {
 			}
 		}
 
-		if (player_->CanICrear()) {
-			if (player_->CanICrear1()) {
-				phase_ = Phase::kFadeOut;
-			}
-		}
+		//if (player_->CanICrear()) {
+		//	if (player_->CanICrear1()) {
+		//		phase_ = Phase::kFadeOut;
+		//	}
+		//}
 
 		CheckAllCollisions();
 
