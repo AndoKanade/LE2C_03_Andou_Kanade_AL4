@@ -67,9 +67,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="GameScene.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -106,11 +103,11 @@
     <ClCompile Include="endScene.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GameScene.h">
-      <Filter>ソース ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="Player.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -142,6 +139,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="endScene.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="GameScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
