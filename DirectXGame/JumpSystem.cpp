@@ -40,9 +40,10 @@ void JumpSystem::Update(float deltaTime) {
 }
 
 void JumpSystem::Draw(Camera *camera) {
+    DirectXCommon* dxCommon = DirectXCommon::GetInstance();
   if (!model_)
     return;
-  Model::PreDraw();
+  Model::PreDraw(dxCommon->GetCommandList());
 
   for (const auto &p : particles_) {
     worldTransform_.translation_ = p.position;
