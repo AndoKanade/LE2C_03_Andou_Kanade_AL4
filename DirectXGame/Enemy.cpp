@@ -5,38 +5,54 @@
 #include <cassert>
 #include <numbers>
 
-// 02_09 スライド5枚目
-void Enemy::Initialize(Model* model, Camera* camera, const Vector3& position) {
-
-	// NULLチェック
+void Enemy::Initialize(Model* model,Camera* camera,const Vector3& position,Type type){
 	assert(model);
-
-	// 02_09 7枚目
 	model_ = model;
-	// 02_09 7枚目
 	camera_ = camera;
-	// 02_09 7枚目
+
+	// タイプを保存
+	type_ = type;
+
 	worldTransform_.Initialize();
 	worldTransform_.translation_ = position;
-	// 02_09 7枚目 角度調整
-	worldTransform_.rotation_.y = std::numbers::pi_v<float> * 3.0f / 2.0f;
+	worldTransform_.rotation_.y = std::numbers::pi_v<float> *3.0f / 2.0f;
 
-	// 02_09 16枚目
-	velocity_ = {-kWalkSpeed, 0, 0};
-	// 02_09 20枚目
+	// ★追加: タイプごとの設定
+	objectColor_.Initialize(); // 色用
+
+	if(type_ == Type::kScarecrow){
+		// --- カカシの設定 ---
+		hp_ = 9999; // 死なないように
+		velocity_ = {0, 0, 0}; // 動かない
+		objectColor_.SetColor({0.5f, 1.0f, 0.5f, 1.0f}); // 緑色
+		worldTransform_.scale_ = {1.5f, 1.5f, 1.5f}; // 普通サイズ
+	} // Enemy.cpp Initialize内 (ボスの設定部分)
+
+	else if(type_ == Type::kBoss){
+		hp_ = 10;
+		objectColor_.SetColor({1.0f, 0.0f, 0.0f, 1.0f}); // 赤色で威圧感
+
+		// Blenderで作ったモデルサイズに合わせて倍率を調整
+		// もしBlenderですでに大きく作っていたら 1.0f でもOK
+		worldTransform_.scale_ = {2.0f, 2.0f, 2.0f};
+
+		// ボスはゆっくり回転させると巨大感が出る
+		velocity_ = {-0.01f, 0, 0}; // 移動はゆっくり
+	}
+
 	walkTimer = 0.0f;
 }
 
 // 02_09 スライド5枚目
-void Enemy::Update() {
+void Enemy::Update(){
 
 	// 変更リクエストがあったら
-	if (behaviorRequest_ != Behavior::kUnknown) {
+	if(behaviorRequest_ != Behavior::kUnknown){
 		// 振るまいを変更する
 		behavior_ = behaviorRequest_;
 
 		// 各振るまいごとの初期化を実行
-		switch (behavior_) {
+		switch(behavior_){
 		case Behavior::kDefeated:
 		default:
 			counter_ = 0;
@@ -48,47 +64,75 @@ void Enemy::Update() {
 	}
 
 	// 02_15 13枚目
-	switch (behavior_) {
-	// 歩行
+	switch(behavior_){
+		// 歩行
 	case Behavior::kWalk:
 		// 02_09 16枚目 移動
-		// worldTransform_.translation_ += velocity_;
+		//worldTransform_.translation_ += velocity_;
 
-		// 02_09 20枚目
-		// walkTimer += 1.0f / 60.0f;
+		//// 02_09 20枚目
+		//walkTimer += 1.0f / 60.0f;
 
-		// 02_09 23枚目 回転アニメーション
-		// worldTransform_.rotation_.x = std::sin(std::numbers::pi_v<float> * 2.0f * walkTimer / kWalkMotionTime);
+		//// 02_09 23枚目 回転アニメーション
+		//worldTransform_.rotation_.x = std::sin(std::numbers::pi_v<float> *2.0f * walkTimer / kWalkMotionTime);
 
 		// 02_09 スライド8枚目 ワールド行列更新
 		WorldTransformUpdate(worldTransform_);
 		break;
-	// やられ
+		// やられ
 	case Behavior::kDefeated:
 		// 02_15 15枚目
-	//	counter_ += 1.0f / 60.0f;
+		counter_ += 1.0f / 60.0f;
 
-		//worldTransform_.rotation_.y += 0.3f;
-		//worldTransform_.rotation_.x = EaseOut(ToRadians(kDefeatedMotionAngleStart), ToRadians(kDefeatedMotionAngleEnd), counter_ / kDefeatedTime);
+		worldTransform_.rotation_.y += 0.3f;
+		worldTransform_.rotation_.x = EaseOut(ToRadians(kDefeatedMotionAngleStart),ToRadians(kDefeatedMotionAngleEnd),counter_ / kDefeatedTime);
 
-		//WorldTransformUpdate(worldTransform_);
+		WorldTransformUpdate(worldTransform_);
 
-	//	if (counter_ >= kDefeatedTime) {
+		if(counter_ >= kDefeatedTime){
 			isDead_ = true;
-	//	}
+		}
 		break;
 	}
 }
 
-// 02_09 スライド5枚目
-void Enemy::Draw() {
+void Enemy::Draw(){
+	// ★変更: 色を渡して描画
+	model_->Draw(worldTransform_,*camera_,&objectColor_);
+}
 
-	// 02_09 スライド9枚目  モデル描画
-	model_->Draw(worldTransform_, *camera_);
+// OnCollisionの実装 (HP処理)
+void Enemy::OnCollision(const Player* player){
+	if(behavior_ == Behavior::kDefeated){
+		return;
+	}
+
+	// エフェクト発生 (共通)
+	if(gameScene_){
+		Vector3 pos = player->GetWorldPosition();
+		Vector3 effectPos = (GetWorldPosition() + pos) * 0.5f;
+		gameScene_->CreateEffect(effectPos);
+	}
+
+	// ★追加: カカシならダメージ処理をスキップ
+	if(type_ == Type::kScarecrow){
+		// 何もしない（HP減らない、死なない）
+		// 練習用に「当たった音」や「少し揺れる」などを入れても良い
+		return;
+	}
+
+	// ★追加: ボスならHPを減らす
+	hp_--;
+
+	// HPが尽きたら死亡
+	if(hp_ <= 0){
+		behaviorRequest_ = Behavior::kDefeated;
+		isCollisionDisabled_ = true;
+	}
 }
 
 // 02_10 スライド14枚目
-AABB Enemy::GetAABB() {
+AABB Enemy::GetAABB(){
 
 	Vector3 worldPos = GetWorldPosition();
 
@@ -101,7 +145,7 @@ AABB Enemy::GetAABB() {
 }
 
 // 02_10 スライド14枚目
-Vector3 Enemy::GetWorldPosition() {
+Vector3 Enemy::GetWorldPosition(){
 
 	Vector3 worldPos;
 
@@ -111,33 +155,4 @@ Vector3 Enemy::GetWorldPosition() {
 	worldPos.z = worldTransform_.matWorld_.m[3][2];
 
 	return worldPos;
-}
-
-// 02_10 スライド20枚目
-void Enemy::OnCollision(const Player* player) {
-
-	if (behavior_ == Behavior::kDefeated) {
-		// 敵がやられているなら何もしない
-		return;
-	}
-
-	// プレイヤーが攻撃中なら敵が死ぬ
-	// player.hをインクルード
-	if (gameScene_) {
-
-		Vector3 pos = player->GetWorldPosition();
-
-		// 敵と自キャラの中間位置にエフェクトを生成
-		Vector3 effectPos;
-
-		effectPos.x = (GetWorldPosition() + pos).x / 2.0f;
-		effectPos.y = (GetWorldPosition() + pos).y / 2.0f;
-		effectPos.z = (GetWorldPosition() + pos).z / 2.0f;
-		gameScene_->CreateEffect(effectPos);
-	}
-	// 敵の振るまいをやられに変更
-	behaviorRequest_ = Behavior::kDefeated;
-
-	// 02_15 20枚目 衝突を無効化
-	isCollisionDisabled_ = true;
 }

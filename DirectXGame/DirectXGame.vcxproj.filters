@@ -139,8 +139,11 @@
     <ClCompile Include="ParticleManager.cpp">
       <Filter>ソース ファイル\particle</Filter>
     </ClCompile>
+    <ClCompile Include="RuleScene.cpp">
+      <Filter>ソース ファイル\scene</Filter>
+    </ClCompile>
     <ClCompile Include="JumpSystem.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ソース ファイル\particle</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -188,6 +191,9 @@
     </ClInclude>
     <ClInclude Include="JumpSystem.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="RuleScene.h">
+      <Filter>ヘッダー ファイル\scene</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
