@@ -72,4 +72,5 @@ public:
 
   // TracerSystem専用のゲッター関数（前方宣言が必要なため、ヘッダーに記載されている可能性あり）
   class JumpSystem *GetJumpSystem();
+ class BossEffectSystem* GetBossEffectSystem();
 };

@@ -1,5 +1,7 @@
 #include "GameScene.h"
 #include "Math.h"
+#include "ParticleManager.h"
+#include "BossEffectSystem.h"
 
 // ==========================================
 // Beamクラスの実装
@@ -159,7 +161,7 @@ void GameScene::Initialize(){
 
 	modelDeathEffect_ = Model::CreateFromOBJ("deathParticle");
 
-	modelParticle_ = Model::CreateFromOBJ("particle");
+	modelParticle_ = Model::CreateFromOBJ("sphere");
 	phase_ = Phase::kFadeIn;
 
 	fade_ = new Fade();
@@ -170,6 +172,9 @@ void GameScene::Initialize(){
 	HitEffect::SetCamera(&camera_);
 
 	modelBeam_ = Model::CreateFromOBJ("sphere");
+
+	ParticleManager::GetInstance()->Initialize();
+	ParticleManager::GetInstance()->GetBossEffectSystem()->Initialize(modelParticle_);
 }
 
 void GameScene::ChangePhase(){
@@ -216,6 +221,8 @@ void GameScene::GenerateBlocks(){
 }
 
 void GameScene::Update(){
+	ParticleManager::GetInstance()->Update(1.0f);
+
 
 	hitEffects_.remove_if([](HitEffect* hitEffect){
 		if(hitEffect->IsDead()){
@@ -330,6 +337,8 @@ void GameScene::Update(){
 		for(Beam* beam : beams_){
 			beam->Update();
 		}
+		// GameScene::Update() 内のボスのループ
+
 
 		// ==========================================
 		// ★変更: クリア判定 (ボス死亡チェック)
@@ -337,6 +346,18 @@ void GameScene::Update(){
 		{
 			bool isBossAlive = false;
 			for(Enemy* enemy : enemies_){
+
+				// 1フレームに2粒出す
+				for(int i = 0; i < 2; i++){
+
+					// ボスの座標を取得
+					Vector3 bossPos = enemy->GetWorldPosition();
+
+					// ★修正: ParticleManagerを使って発生させる！
+					// 乱数計算などは BossEffectSystem::Spawn の中に隠蔽されたのでスッキリ
+					ParticleManager::GetInstance()->GetBossEffectSystem()->Spawn(bossPos);
+				}
+
 				// ボスタイプが生きていればフラグを立てる
 				if(enemy->GetType() == Enemy::Type::kBoss){
 					isBossAlive = true;
@@ -456,7 +477,7 @@ void GameScene::Draw(){
 	for(HitEffect* hitEffect : hitEffects_){
 		hitEffect->Draw();
 	}
-
+	ParticleManager::GetInstance()->Draw(&camera_);
 	Model::PostDraw();
 
 	// スプライト描画前処理

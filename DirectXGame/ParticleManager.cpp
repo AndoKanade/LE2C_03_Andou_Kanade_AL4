@@ -1,5 +1,6 @@
 #include "ParticleManager.h"
 #include "JumpSystem.h"
+#include "BossEffectSystem.h"
 #include <iostream>
 
 // -----------------------------------------------------------------
@@ -22,6 +23,7 @@ void ParticleManager::Initialize(){
 	// 1. 未使用変数の削除 (JumpSystem* jumpSystem = ... を削除)
 	// 2. キー名を "JumpSystem" に統一 (GetJumpSystemでこの名前で探しているため)
 	systems["JumpSystem"] = new JumpSystem();
+	systems["BossEffectSystem"] = new BossEffectSystem();
 
 	std::cout << "ParticleManager: Initialization complete. Systems registered: "
 		<< systems.size() << std::endl;
@@ -63,4 +65,8 @@ void ParticleManager::Shutdown(){
 JumpSystem* ParticleManager::GetJumpSystem(){
 	// Initializeで登録した名前("JumpSystem")と同じキーで取得する
 	return GetSystem<JumpSystem>("JumpSystem");
+}
+
+BossEffectSystem* ParticleManager::GetBossEffectSystem(){
+	return GetSystem<BossEffectSystem>("BossEffectSystem");
 }
