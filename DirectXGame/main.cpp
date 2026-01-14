@@ -4,6 +4,7 @@
 #include "RuleScene.h"
 #include "endScene.h"
 #include <Windows.h>
+#include "ParticleManager.h"
 
 using namespace KamataEngine;
 
@@ -123,6 +124,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	audio->Initialize();
 
+	ParticleManager::GetInstance()->Initialize();
 
 	scene = Scene::kTitle;
 	titleScene = new TitleScene;
@@ -168,6 +170,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	delete titleScene;
 	delete gameScene;
+	ParticleManager::GetInstance()->Shutdown();
 
 	// エンジンの終了処理
 	KamataEngine::Finalize();
