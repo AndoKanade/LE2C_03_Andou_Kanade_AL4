@@ -664,7 +664,7 @@ void Player::Draw(){
 		case AttackPhase::kAction:
 		case AttackPhase::kRecovery:
 			// 攻撃中と余韻動作中のみ、剣を描画する
-			modelAttack_->Draw(worldTransformAttack_,*camera_);
+		//	modelAttack_->Draw(worldTransformAttack_,*camera_);
 			break;
 		}
 	}
