@@ -7,22 +7,23 @@ using namespace KamataEngine;
 class MapChipField;
 class Enemy;
 
-class Player {
+class Player{
 public:
-	enum class LRDirection {
+	enum class LRDirection{
 		kRight,
 		kLeft,
 	};
 
-	enum Corner { kRightBottom, kLeftBottom, kRightTop, kLeftTop, kNumCorner };
+	enum Corner{ kRightBottom,kLeftBottom,kRightTop,kLeftTop,kNumCorner };
 
-	enum class Behavior {
+	enum class Behavior{
 		kUnknown = -1,
 		kRoot,   // 通常状態
-		kAttack, // 攻撃中
+		kAttack, // 攻撃中（突進・ソード）
+		kShot,   // ★追加: 射撃中（ビーム硬直）
 	};
 
-	enum class AttackPhase {
+	enum class AttackPhase{
 		kUnknown = -1, // 無効な状態
 
 		kAnticipation, // 予備動作
@@ -30,18 +31,24 @@ public:
 		kRecovery,     // 余韻動作
 	};
 
-	void Initialize(Model* model, Model* modelAttack, Camera* camera, const Vector3& position);
+	// ★追加: 能力の種類
+	enum class AbilityType{
+		Sword, // 近距離（既存の突進攻撃）
+		Beam   // 遠距離（新規）
+	};
+
+	void Initialize(Model* model,Model* modelAttack,Camera* camera,const Vector3& position);
 
 	void Update();
 
 	void Draw();
 
-	const WorldTransform& GetWorldTransform() const { return worldTransform_; }
+	const WorldTransform& GetWorldTransform() const{ return worldTransform_; }
 
-	const Vector3& GetVelocity() const { return velocity_; }
+	const Vector3& GetVelocity() const{ return velocity_; }
 
-	void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
-	void GetMapChipField(MapChipField** mapChipField) { *mapChipField = mapChipField_; }
+	void SetMapChipField(MapChipField* mapChipField){ mapChipField_ = mapChipField; }
+	void GetMapChipField(MapChipField** mapChipField){ *mapChipField = mapChipField_; }
 
 	Vector3 GetWorldPosition() const;
 
@@ -49,23 +56,40 @@ public:
 
 	void OnCollision(const Enemy* enemy);
 
-	bool IsDead() const { return isDead_; }
+	bool IsDead() const{ return isDead_; }
 
-	bool CanICrear() const { return canICrear; }
-	bool CanICrear1() const { return canICrear1; }
+	bool CanICrear() const{ return canICrear; }
+	bool CanICrear1() const{ return canICrear1; }
 
 	void BehaviorRootUpdate();
-
 	void BehaviorAttackUpdate();
 
-	void BehaviorRootInitialize();
+	// ★追加: 射撃用更新関数
+	void BehaviorShotUpdate();
 
+	void BehaviorRootInitialize();
 	void BehaviorAttackInitialize();
 
-	bool IsAttack() const { return behavior_ == Behavior::kAttack && attackPhase_ == AttackPhase::kAction; }
+	// ★追加: 射撃用初期化関数
+	void BehaviorShotInitialize();
+
+	bool IsAttack() const{ return behavior_ == Behavior::kAttack && attackPhase_ == AttackPhase::kAction; }
 
 	// 02_15
-	bool IsCollisionDisabled() const { return isCollisionDisabled_; }
+	bool IsCollisionDisabled() const{ return isCollisionDisabled_; }
+
+	// ★追加: シーン側で「弾を撃つタイミング」を知るための関数
+	// 呼ぶとフラグがfalseに戻る（使い捨て）
+	bool IsShotBeam(){
+		if(isShotBeamRequest_){
+			isShotBeamRequest_ = false;
+			return true;
+		}
+		return false;
+	}
+
+	// ★追加: 現在の能力を取得（デバッグや色変え用）
+	AbilityType GetAbilityType() const{ return abilityType_; }
 
 private:
 	WorldTransform worldTransform_;
@@ -92,7 +116,7 @@ private:
 	static inline const float kBlank = 0.04f;
 
 	void InputMove();
-	struct CollisionMapInfo {
+	struct CollisionMapInfo{
 		bool ceiling = false;
 		bool landing = false;
 		bool hitWall = false;
@@ -103,7 +127,7 @@ private:
 	void CheckMapCollisionDown(CollisionMapInfo& info);
 	void CheckMapCollisionRight(CollisionMapInfo& info);
 	void CheckMapCollisionLeft(CollisionMapInfo& info);
-	Vector3 CornerPosition(const Vector3& center, Corner corner);
+	Vector3 CornerPosition(const Vector3& center,Corner corner);
 
 	void UpdateOnGround(const CollisionMapInfo& info);
 
@@ -131,9 +155,7 @@ private:
 	bool isCollisionDisabled_ = false; // 衝突無効化
 
 	// ホバリングの変数(仮)
-
 	bool isHovering_ = false;
-
 	const float kHoverAcceleration = kGravityAcceleration * 1.5f;
 	const float kAirControlAcceleration = kAcceleration * 0.5f;
 	const float kLimitAirSpeed = kLimitRunSpeed * 0.7f;
@@ -148,4 +170,13 @@ private:
 
 	int counter;
 
+	// ★追加: 能力管理用の変数
+	AbilityType abilityType_ = AbilityType::Sword; // デフォルトはソード
+	bool isShotBeamRequest_ = false;               // ビーム発射リクエストフラグ
+
+	// ★追加: 射撃用タイマー
+	uint32_t shotTimer_ = 0;
+	static inline const uint32_t kShotTime = 20; // ビームを撃った後の硬直時間
+
+	KamataEngine::ObjectColor objectColor_;
 };

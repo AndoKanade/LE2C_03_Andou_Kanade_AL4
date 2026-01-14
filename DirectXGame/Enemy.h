@@ -11,18 +11,26 @@ using namespace KamataEngine;
 class GameScene;
 
 // 02_09 スライド4枚目
-class Enemy {
+class Enemy{
 
 public:
+	// ★追加: 敵の種類
+	enum class Type{
+		kScarecrow, // カカシ (練習用・無敵)
+		kBoss,      // ボス (倒すとクリア)
+	};
+
 	// 02_15 13枚目 振るまい
-	enum class Behavior {
+	enum class Behavior{
 		kUnknown = -1, // 無効な状態
 		kWalk,         // 歩行状態
 		kDefeated,     // やられ状態
 	};
 
 	// 02_09 スライド5枚目
-	void Initialize(Model* model, Camera* camera, const Vector3& position);
+	// ★変更: 引数に type を追加
+	void Initialize(Model* model,Camera* camera,const Vector3& position,Type type);
+
 	// 02_09 スライド5枚目
 	void Update();
 	// 02_09 スライド5枚目
@@ -34,11 +42,14 @@ public:
 	// 02_10 スライド20枚目 衝突応答
 	void OnCollision(const Player* player);
 	// 02_15 6枚目
-	bool IsDead() const { return isDead_; }
+	bool IsDead() const{ return isDead_; }
 	// 02_15 20枚目
-	bool IsCollisionDisabled() const { return isCollisionDisabled_; }
+	bool IsCollisionDisabled() const{ return isCollisionDisabled_; }
 	// 02_16 19
-	void SetGameScene(GameScene* gameScene) { gameScene_ = gameScene; }
+	void SetGameScene(GameScene* gameScene){ gameScene_ = gameScene; }
+
+	// ★追加: 外部からタイプを確認する用 (クリア判定などで使用)
+	Type GetType() const{ return type_; }
 
 private:
 	// 02_09 6枚目 ザ・ワールド
@@ -83,4 +94,11 @@ private:
 	bool isCollisionDisabled_ = false;
 	// 02_16 19
 	GameScene* gameScene_ = nullptr;
+
+	// ★追加: 敵パラメータ
+	int hp_ = 0;
+	Type type_ = Type::kScarecrow;
+
+	// ★追加: 色変え用の変数 (カカシとボスを見分けるため)
+	KamataEngine::ObjectColor objectColor_;
 };

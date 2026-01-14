@@ -12,8 +12,33 @@
 
 #include <vector>
 
+class Beam{
+public:
+	void Initialize(Model* model,const Vector3& position,const Vector3& velocity);
+	void Update();
+	void Draw(const Camera& camera);
+	bool IsDead() const{ return isDead_; }
+	void OnCollision(); // 何かに当たった時
+
+	// 当たり判定用
+	Vector3 GetWorldPosition() const{ return worldTransform_.translation_; }
+	// 簡易的な球判定用の半径
+	float GetRadius() const{ return 0.5f; }
+
+	ObjectColor objectColor_;
+
+
+private:
+	WorldTransform worldTransform_;
+	Model* model_ = nullptr;
+	Vector3 velocity_;
+	int lifeTimer_ = 120; // 2秒で消える
+	bool isDead_ = false;
+};
+
+
 // ゲームシーンクラス
-class GameScene {
+class GameScene{
 public:
 	~GameScene();
 	// 初期化
@@ -29,13 +54,13 @@ public:
 
 	void CheckAllCollisions();
 
-	bool IsFinished() const { return finished_; }
+	bool IsFinished() const{ return finished_; }
 
 	// エフェクトを生成
 	void CreateEffect(const Vector3& position);
 
 private:
-	enum class Phase {
+	enum class Phase{
 		kFadeIn,  // フェードイン 02_13 28枚目で追加
 		kPlay,    // ゲームプレイ
 		kDeath,   // デス演出
@@ -43,6 +68,10 @@ private:
 	};
 
 	Phase phase_;
+
+	Model* modelBeam_ = nullptr; // ビームのモデル
+	std::list<Beam*> beams_;     // ビームのリスト
+
 
 	void ChangePhase();
 
@@ -81,6 +110,8 @@ private:
 	KamataEngine::Model* modelEnemy3_ = nullptr;
 
 	std::list<Enemy*> enemies_;
+	// GameScene.h の private メンバ変数に追加
+	Model* modelBoss_ = nullptr; // ★追加
 	DeathParticles* deathParticles_ = nullptr;
 
 	Model* modelDeathEffect_ = nullptr;

@@ -1,12 +1,14 @@
 #include "GameScene.h"
 #include "KamataEngine.h"
 #include "TitleScene.h"
+#include "RuleScene.h"
 #include "endScene.h"
 #include <Windows.h>
 
 using namespace KamataEngine;
 
 TitleScene* titleScene = nullptr;
+RuleScene* ruleScene = nullptr;
 GameScene* gameScene = nullptr;
 EndScene* endScene = nullptr;
 
@@ -14,6 +16,7 @@ EndScene* endScene = nullptr;
 enum class Scene {
 	kUnknown = 0,
 	kTitle,
+	kRule,
 	kGame,
 	kEnd,
 };
@@ -26,13 +29,25 @@ void ChangeScene() {
 	case Scene::kTitle:
 		if (titleScene->IsFinished()) {
 			// シーン変更
-			scene = Scene::kGame;
+			scene = Scene::kRule;
 			delete titleScene;
 			titleScene = nullptr;
+			ruleScene = new RuleScene;
+			ruleScene->Initialize();
+		}
+		break;
+
+	case Scene::kRule:
+		if(ruleScene->IsFinished()){
+			// シーン変更
+			scene = Scene::kGame;
+			delete ruleScene;
+			ruleScene = nullptr;
 			gameScene = new GameScene;
 			gameScene->Initialize();
 		}
 		break;
+
 	case Scene::kGame:
 
 		if (gameScene->IsFinished()) {
@@ -63,6 +78,9 @@ void UpdateScene() {
 	case Scene::kTitle:
 		titleScene->Update();
 		break;
+	case Scene::kRule:
+		ruleScene->Update();
+		break;
 	case Scene::kGame:
 		gameScene->Update();
 		break;
@@ -75,6 +93,9 @@ void DrawScene() {
 	switch (scene) {
 	case Scene::kTitle:
 		titleScene->Draw();
+		break;
+	case Scene::kRule:
+		ruleScene->Draw();
 		break;
 	case Scene::kGame:
 		gameScene->Draw();
