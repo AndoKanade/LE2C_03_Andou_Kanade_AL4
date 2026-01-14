@@ -4,42 +4,6 @@
 #include "BossEffectSystem.h"
 
 // ==========================================
-// Beamクラスの実装
-// ==========================================
-void Beam::Initialize(Model* model,const Vector3& position,const Vector3& velocity){
-	model_ = model;
-	worldTransform_.Initialize();
-	worldTransform_.translation_ = position;
-	worldTransform_.scale_ = {0.5f, 0.5f, 0.5f}; // サイズ調整
-	velocity_ = velocity;
-
-	objectColor_.Initialize();
-	objectColor_.SetColor({1.0f, 1.0f, 0.0f, 1.0f}); // 黄色	
-}
-
-void Beam::Update(){
-	// 移動
-	worldTransform_.translation_ += velocity_;
-
-	// 行列更新
-	WorldTransformUpdate(worldTransform_);
-
-	// 寿命処理
-	if(--lifeTimer_ <= 0){
-		isDead_ = true;
-	}
-}
-
-void Beam::Draw(const Camera& camera){
-	model_->Draw(worldTransform_,camera,&objectColor_);
-}
-
-void Beam::OnCollision(){
-	isDead_ = true;
-}
-
-
-// ==========================================
 // GameSceneの実装
 // ==========================================
 using namespace KamataEngine;
@@ -353,6 +317,39 @@ void GameScene::UpdateGameObjects(){
 		newBeam->Initialize(modelBeam_,startPos,velocity);
 		beams_.push_back(newBeam);
 	}
+
+	if(rand() % 300 == 0){
+		// ボスを探す
+		for(Enemy* enemy : enemies_){
+			if(enemy->GetType() == Enemy::Type::kBoss){
+
+				// 弾を生成
+				Beam* newBullet = new Beam();
+				Vector3 bossPos = enemy->GetWorldPosition();
+
+				// プレイヤーに向かうベクトルを計算（狙い撃ち）
+				Vector3 targetPos = player_->GetWorldPosition();
+				Vector3 velocity = targetPos - bossPos;
+
+				// 正規化（長さを1にする）して、スピード(0.3)を掛ける
+				float len = sqrt(velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z);
+				if(len > 0.0f){
+					velocity.x /= len;
+					velocity.y /= len;
+					velocity.z /= len;
+				}
+				Vector3 speed = {velocity.x * 0.3f, velocity.y * 0.3f, velocity.z * 0.3f};
+
+				// 生成してリストに追加
+				newBullet->Initialize(modelBeam_,bossPos,speed);
+				newBullet->SetIsEnemy(true);
+
+				beams_.push_back(newBullet);
+			}
+		}
+	}
+
+
 	for(Beam* beam : beams_){
 		beam->Update();
 	}
@@ -433,6 +430,9 @@ void GameScene::CheckAllCollisions(){
 	// --- 2. ビーム vs 敵 ---
 	for(auto itBeam = beams_.begin(); itBeam != beams_.end(); ++itBeam){
 		Beam* beam = *itBeam;
+		if(beam->IsEnemy()){
+			continue;
+		}
 
 		for(Enemy* enemy : enemies_){
 			// 簡易的な球判定（距離の2乗チェック）
@@ -453,4 +453,37 @@ void GameScene::CheckAllCollisions(){
 			}
 		}
 	}
+
+	if(player_->IsInhaling()){ // プレイヤーが口を開けているか？
+
+		// プレイヤーの吸い込み範囲を取得
+		AABB inhaleArea = player_->GetInhaleArea();
+
+		// 飛んでいるビームを全チェック
+		for(auto it = beams_.begin(); it != beams_.end(); ){
+			Beam* beam = *it;
+			Vector3 bPos = beam->GetWorldPosition();
+
+			// ビームが吸い込み範囲に入っているか？
+			if(bPos.x >= inhaleArea.min.x && bPos.x <= inhaleArea.max.x &&
+				bPos.y >= inhaleArea.min.y && bPos.y <= inhaleArea.max.y &&
+				bPos.z >= inhaleArea.min.z && bPos.z <= inhaleArea.max.z){
+
+				// ★吸い込み成功！
+
+				// 1. 弾を消す
+				delete beam;
+				it = beams_.erase(it);
+
+				// 2. プレイヤーを「満腹」にする
+				player_->CatchAmmo();
+
+				// 1フレームに1個吸えば十分なのでループを抜ける
+				break;
+			} else{
+				++it;
+			}
+		}
+	}
+
 }

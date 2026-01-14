@@ -31,16 +31,17 @@ void Player::Initialize(Model* model,Model* modelAttack,Camera* camera,const Vec
 	worldTransformAttack_.rotation_ = worldTransform_.rotation_;
 
 	// --- パーティクルシステムの取得 ---
-	// ジャンプエフェクトの準備
 	JumpSystem* jump = ParticleManager::GetInstance()->GetJumpSystem();
 	if(jump){
 		jump->Initialize(model_,textureHandle_);
 	}
 
 	// --- パラメータ初期化 ---
-	// デフォルトの能力を設定
-	abilityType_ = AbilityType::Sword;
 	objectColor_.Initialize();
+
+	// ★追加: 状態のリセット
+	isInhaling_ = false;
+	hasAmmo_ = false;
 }
 
 // =================================================================
@@ -49,7 +50,6 @@ void Player::Initialize(Model* model,Model* modelAttack,Camera* camera,const Vec
 void Player::Update(){
 
 	// --- 行動遷移リクエストの処理 ---
-	// 振る舞い（Behavior）の変更要求があれば切り替える
 	if(behaviorRequest_ != Behavior::kUnknown){
 		behavior_ = behaviorRequest_;
 
@@ -76,19 +76,23 @@ void Player::Update(){
 		BehaviorRootUpdate(); // 通常移動
 		break;
 	case Behavior::kAttack:
-		BehaviorAttackUpdate(); // ソード攻撃
+		BehaviorAttackUpdate(); // ※今回は使わないかもですが残しておきます
 		break;
 	case Behavior::kShot:
-		BehaviorShotUpdate(); // ビーム射撃（硬直）
+		BehaviorShotUpdate(); // 吐き出し攻撃
 		break;
 	}
 
-	// --- 色の反映 ---
-	// 能力に応じてプレイヤーの色を変える
-	if(abilityType_ == AbilityType::Sword){
-		objectColor_.SetColor({1.0f, 0.0f, 0.0f, 1.0f}); // ソード：赤
-	} else if(abilityType_ == AbilityType::Beam){
-		objectColor_.SetColor({1.0f, 1.0f, 0.0f, 1.0f}); // ビーム：黄色
+	// --- 色の反映（状態に合わせて色を変える） ---
+	if(hasAmmo_){
+		// 弾を持っている時：オレンジ（満腹）
+		objectColor_.SetColor({1.0f, 0.5f, 0.0f, 1.0f});
+	} else if(isInhaling_){
+		// 吸い込み中：青（吸い込み）
+		objectColor_.SetColor({0.5f, 0.5f, 1.0f, 1.0f});
+	} else{
+		// 通常時：白
+		objectColor_.SetColor({1.0f, 1.0f, 1.0f, 1.0f});
 	}
 
 	// --- 行列更新 ---
@@ -100,26 +104,8 @@ void Player::Update(){
 // 描画処理
 // =================================================================
 void Player::Draw(){
-
-	// 1. プレイヤー本体の描画
+	// プレイヤー本体の描画
 	model_->Draw(worldTransform_,*camera_,&objectColor_);
-
-	// 2. 攻撃モデル（剣）の描画
-	// ソード攻撃中 (kAttack) かつ、アクション中のみ表示する制御
-	if(behavior_ == Behavior::kAttack){
-		switch(attackPhase_){
-		case AttackPhase::kAnticipation:
-			// 予備動作（溜め）中は表示しない
-			break;
-		case AttackPhase::kAction:
-		case AttackPhase::kRecovery:
-			// 必要であればコメントアウトを解除して描画
-			// modelAttack_->Draw(worldTransformAttack_, *camera_);
-			break;
-		default:
-			break;
-		}
-	}
 }
 
 // =================================================================
@@ -140,10 +126,8 @@ void Player::BehaviorRootUpdate(){
 
 	CheckMapCollision(collisionMapInfo);
 
-	// 移動反映
 	worldTransform_.translation_ += collisionMapInfo.move;
 
-	// 天井・壁・接地処理
 	if(collisionMapInfo.ceiling){
 		velocity_.y = 0;
 	}
@@ -159,29 +143,33 @@ void Player::BehaviorRootUpdate(){
 		worldTransform_.rotation_.y = EaseInOut(destinationRotationY,turnFirstRotationY_,turnTimer_ / kTimeTurn);
 	}
 
-	// --- 能力切り替えと攻撃 ---
+	// =========================================================
+	// ★変更: 吸い込み・吐き出しアクション
+	// =========================================================
 
-	// [1]キー: ソードモード
-	if(Input::GetInstance()->TriggerKey(DIK_1)){
-		abilityType_ = AbilityType::Sword;
+	// まだ弾を持っていない場合 -> 「吸い込み」が可能
+	if(!hasAmmo_){
+		if(Input::GetInstance()->PushKey(DIK_SPACE)){
+			// スペースキーを押している間、吸い込み状態にする
+			isInhaling_ = true;
+		} else{
+			isInhaling_ = false;
+		}
 	}
-	// [2]キー: ビームモード
-	if(Input::GetInstance()->TriggerKey(DIK_2)){
-		abilityType_ = AbilityType::Beam;
-	}
+	// すでに弾を持っている場合 -> 「吐き出し」が可能
+	else{
+		isInhaling_ = false; // 満腹なので吸い込めない
 
-	// [SPACE]キー: 攻撃
-	if(Input::GetInstance()->TriggerKey(DIK_SPACE)){
-		if(abilityType_ == AbilityType::Sword){
-			behaviorRequest_ = Behavior::kAttack; // 近接攻撃へ
-		} else if(abilityType_ == AbilityType::Beam){
-			behaviorRequest_ = Behavior::kShot;   // 射撃へ
+		// スペースキーで発射！
+		if(Input::GetInstance()->TriggerKey(DIK_SPACE)){
+			behaviorRequest_ = Behavior::kShot; // 射撃ステートへ遷移
+			hasAmmo_ = false; // 弾を消費して空っぽに戻る
 		}
 	}
 }
 
 // =================================================================
-// 振る舞い: ソード攻撃 (Attack)
+// 振る舞い: ソード攻撃 (今回は未使用に近いが残しておく)
 // =================================================================
 void Player::BehaviorAttackInitialize(){
 	attackParameter_ = 0;
@@ -190,17 +178,17 @@ void Player::BehaviorAttackInitialize(){
 }
 
 void Player::BehaviorAttackUpdate(){
+	// 既存コード維持（もしソード攻撃を使いたくなったとき用）
 	const Vector3 attackVelocity = {0.8f, 0.0f, 0.0f};
 	Vector3 velocity{};
 	attackParameter_++;
 
 	switch(attackPhase_){
-	case AttackPhase::kAnticipation: // 溜め
+	case AttackPhase::kAnticipation:
 	default:
 	{
 		velocity = {};
 		float t = static_cast<float>(attackParameter_) / kAnticipationTime;
-		// 縮んで溜める演出
 		worldTransform_.scale_.z = EaseOut(1.0f,0.3f,t);
 		worldTransform_.scale_.y = EaseOut(1.0f,1.6f,t);
 
@@ -211,14 +199,13 @@ void Player::BehaviorAttackUpdate(){
 		break;
 	}
 	case AttackPhase::kAction:
-	{ // 突進
+	{
 		if(lrDirection_ == LRDirection::kRight){
 			velocity = +attackVelocity;
 		} else{
 			velocity = -attackVelocity;
 		}
 		float t = static_cast<float>(attackParameter_) / kActionTime;
-		// 伸びて突く演出
 		worldTransform_.scale_.z = EaseOut(0.3f,1.3f,t);
 		worldTransform_.scale_.y = EaseIn(1.6f,0.7f,t);
 
@@ -229,10 +216,9 @@ void Player::BehaviorAttackUpdate(){
 		break;
 	}
 	case AttackPhase::kRecovery:
-	{ // 硬直(戻り)
+	{
 		velocity = {};
 		float t = static_cast<float>(attackParameter_) / kRecoveryTime;
-		// 元の形に戻る
 		worldTransform_.scale_.z = EaseOut(1.3f,1.0f,t);
 		worldTransform_.scale_.y = EaseOut(0.7f,1.0f,t);
 
@@ -243,37 +229,34 @@ void Player::BehaviorAttackUpdate(){
 	}
 	}
 
-	// 攻撃中の移動処理（壁抜け防止）
 	CollisionMapInfo collisionMapInfo = {};
 	collisionMapInfo.move = velocity;
 	CheckMapCollision(collisionMapInfo);
 	worldTransform_.translation_ += collisionMapInfo.move;
 
-	// 攻撃モデルの位置合わせ
 	worldTransformAttack_.translation_ = worldTransform_.translation_;
 	worldTransformAttack_.rotation_ = worldTransform_.rotation_;
 }
 
 // =================================================================
-// 振る舞い: ビーム射撃 (Shot)
+// 振る舞い: ビーム射撃 (Shot) = 吐き出し攻撃
 // =================================================================
 void Player::BehaviorShotInitialize(){
-	// 足を止める（慣性を消す）
+	// 足を止める
 	velocity_ = {};
 
-	// 硬直タイマーをセット
+	// 硬直時間（吐き出しモーションの時間）
 	shotTimer_ = kShotTime;
 
-	// GameScene側で検知させるためのフラグを立てる
+	// GameScene側で検知して弾を生成するフラグON
 	isShotBeamRequest_ = true;
 }
 
 void Player::BehaviorShotUpdate(){
-	// 重力処理（空中で撃った時に不自然に止まらないように）
+	// 重力のみ適用
 	velocity_.y += -kGravityAcceleration / 60.0f;
 	velocity_.y = std::max(velocity_.y,-kLimitFallSpeed);
 
-	// マップ衝突判定
 	CollisionMapInfo collisionMapInfo = {};
 	collisionMapInfo.move = velocity_;
 	collisionMapInfo.landing = false;
@@ -284,47 +267,56 @@ void Player::BehaviorShotUpdate(){
 	worldTransform_.translation_ += collisionMapInfo.move;
 	UpdateOnGround(collisionMapInfo);
 
-	// タイマー更新
 	shotTimer_--;
 
-	// 硬直終了で通常状態へ戻る
 	if(shotTimer_ <= 0){
 		behaviorRequest_ = Behavior::kRoot;
 	}
 }
 
 // =================================================================
-// 入力と物理挙動 (InputMove)
+// ★追加: 吸い込み範囲の取得
+// =================================================================
+
+AABB Player::GetInhaleArea(){
+	Vector3 pos = GetWorldPosition();
+	float range = 4.0f; // 吸い込み範囲の広さ（大きめに設定）
+
+	AABB area;
+	// プレイヤーの向いている方向の前方に判定ボックスを作る
+	if(lrDirection_ == LRDirection::kRight){
+		area.min = {pos.x + 0.5f, pos.y - 1.5f, pos.z - 2.0f};
+		area.max = {pos.x + 0.5f + range, pos.y + 1.5f, pos.z + 2.0f};
+	} else{
+		area.min = {pos.x - 0.5f - range, pos.y - 1.5f, pos.z - 2.0f};
+		area.max = {pos.x - 0.5f, pos.y + 1.5f, pos.z + 2.0f};
+	}
+	return area;
+}
+
+
+// =================================================================
+// 入力と物理挙動 (InputMove) - 変更なし
 // =================================================================
 void Player::InputMove(){
 
 	if(onGround_){
-		// --- 地上移動 ---
 		isHovering_ = false;
 
-		// 左右移動
 		if(Input::GetInstance()->PushKey(DIK_RIGHT) || Input::GetInstance()->PushKey(DIK_LEFT)){
 			Vector3 acceleration = {};
 
 			if(Input::GetInstance()->PushKey(DIK_RIGHT)){
-				// 切り返し時の減衰
 				if(velocity_.x < 0.0f){ velocity_.x *= (1.0f - kAttenuation); }
-
 				acceleration.x += kAcceleration / 60.0f;
-
-				// 向き変更
 				if(lrDirection_ != LRDirection::kRight){
 					lrDirection_ = LRDirection::kRight;
 					turnFirstRotationY_ = worldTransform_.rotation_.y;
 					turnTimer_ = kTimeTurn;
 				}
 			} else if(Input::GetInstance()->PushKey(DIK_LEFT)){
-				// 切り返し時の減衰
 				if(velocity_.x > 0.0f){ velocity_.x *= (1.0f - kAttenuation); }
-
 				acceleration.x -= kAcceleration / 60.0f;
-
-				// 向き変更
 				if(lrDirection_ != LRDirection::kLeft){
 					lrDirection_ = LRDirection::kLeft;
 					turnFirstRotationY_ = worldTransform_.rotation_.y;
@@ -334,43 +326,35 @@ void Player::InputMove(){
 			velocity_ += acceleration;
 			velocity_.x = std::clamp(velocity_.x,-kLimitRunSpeed,kLimitRunSpeed);
 		} else{
-			// 摩擦で減速
 			velocity_.x *= (1.0f - kAttenuation);
 		}
 
-		// 微小な速度は0にする
 		if(std::abs(velocity_.x) <= 0.0001f){
 			velocity_.x = 0.0f;
 		}
 
-		// --- ジャンプ ---
 		if(Input::GetInstance()->PushKey(DIK_UP)){
 			velocity_ += Vector3(0,kJumpAcceleration / 60.0f,0);
 
-			// ジャンプエフェクト発生
 			JumpSystem* jumpSys = ParticleManager::GetInstance()->GetJumpSystem();
 			if(jumpSys){
 				Vector3 footPos = worldTransform_.translation_;
-				footPos.y -= 1.0f; // 足元調整
+				footPos.y -= 1.0f;
 				jumpSys->Spawn(footPos);
 			}
 		}
 	} else{
-		// --- 空中挙動 (ホバリング等) ---
 		isHovering_ = true;
 
 		if(Input::GetInstance()->TriggerKey(DIK_UP)){
-			// ホバリング上昇
 			velocity_.y += kHoverImpulse;
 			velocity_.y = std::min(velocity_.y,kLimitHoverImpulseSpeed);
 		} else{
-			// 通常落下
 			isHovering_ = false;
 			velocity_ += Vector3(0,-kGravityAcceleration / 60.0f,0);
 			velocity_.y = std::max(velocity_.y,-kLimitFallSpeed);
 		}
 
-		// 空中制御
 		if(Input::GetInstance()->PushKey(DIK_RIGHT)){
 			velocity_.x += kAirControlAcceleration / 60.0f;
 			if(lrDirection_ != LRDirection::kRight){
@@ -393,19 +377,16 @@ void Player::InputMove(){
 }
 
 // =================================================================
-// 衝突判定系 (Collision)
+// 衝突判定系
 // =================================================================
 
-// 敵との衝突 (ダメージや無敵判定など)
 void Player::OnCollision(const Enemy* enemy){
-	// 攻撃中は無敵
+	// 攻撃中(吐き出し中)は無敵
 	if(IsAttack()){
 		return;
 	}
+	(void)enemy;
 
-	(void)enemy; // 未使用変数の警告消し
-
-	// テスト用ロジック（必要に応じて有効化してください）
 	canICrear = true;
 	counter++;
 	if(canICrear){
@@ -414,13 +395,12 @@ void Player::OnCollision(const Enemy* enemy){
 		}
 	}
 
-	// isDead_ = true;          // 死亡フラグ
-	isCollisionDisabled_ = true; // 一時的に衝突無効化
+	// isDead_ = true;
+	isCollisionDisabled_ = true;
 }
 
-// -------------------------------------------------------------
-// マップチップ衝突判定 (詳細実装)
-// -------------------------------------------------------------
+// --- 以下、マップチップ判定処理（変更なし） ---
+
 void Player::CheckMapCollision(CollisionMapInfo& info){
 	CheckMapCollisionUp(info);
 	CheckMapCollisionDown(info);
@@ -428,7 +408,6 @@ void Player::CheckMapCollision(CollisionMapInfo& info){
 	CheckMapCollisionLeft(info);
 }
 
-// 上方向の判定
 void Player::CheckMapCollisionUp(CollisionMapInfo& info){
 	if(info.move.y <= 0) return;
 
@@ -438,13 +417,11 @@ void Player::CheckMapCollisionUp(CollisionMapInfo& info){
 	}
 
 	bool hit = false;
-	// 左上
 	if(mapChipField_->GetMapChipTypeByIndex(
 		mapChipField_->GetMapChipIndexSetByPosition(positionsNew[kLeftTop]).xIndex,
 		mapChipField_->GetMapChipIndexSetByPosition(positionsNew[kLeftTop]).yIndex) == MapChipType::kBlock){
 		hit = true;
 	}
-	// 右上
 	if(mapChipField_->GetMapChipTypeByIndex(
 		mapChipField_->GetMapChipIndexSetByPosition(positionsNew[kRightTop]).xIndex,
 		mapChipField_->GetMapChipIndexSetByPosition(positionsNew[kRightTop]).yIndex) == MapChipType::kBlock){
@@ -461,7 +438,6 @@ void Player::CheckMapCollisionUp(CollisionMapInfo& info){
 	}
 }
 
-// 下方向の判定 (接地)
 void Player::CheckMapCollisionDown(CollisionMapInfo& info){
 	if(info.move.y >= 0) return;
 
@@ -471,13 +447,11 @@ void Player::CheckMapCollisionDown(CollisionMapInfo& info){
 	}
 
 	bool hit = false;
-	// 左下
 	if(mapChipField_->GetMapChipTypeByIndex(
 		mapChipField_->GetMapChipIndexSetByPosition(positionsNew[kRightBottom]).xIndex,
 		mapChipField_->GetMapChipIndexSetByPosition(positionsNew[kRightBottom]).yIndex) == MapChipType::kBlock){
 		hit = true;
 	}
-	// 右下
 	if(mapChipField_->GetMapChipTypeByIndex(
 		mapChipField_->GetMapChipIndexSetByPosition(positionsNew[kLeftBottom]).xIndex,
 		mapChipField_->GetMapChipIndexSetByPosition(positionsNew[kLeftBottom]).yIndex) == MapChipType::kBlock){
@@ -494,7 +468,6 @@ void Player::CheckMapCollisionDown(CollisionMapInfo& info){
 	}
 }
 
-// 右方向の判定
 void Player::CheckMapCollisionRight(CollisionMapInfo& info){
 	if(info.move.x <= 0) return;
 
@@ -525,7 +498,6 @@ void Player::CheckMapCollisionRight(CollisionMapInfo& info){
 	}
 }
 
-// 左方向の判定
 void Player::CheckMapCollisionLeft(CollisionMapInfo& info){
 	if(info.move.x >= 0) return;
 
@@ -555,6 +527,38 @@ void Player::CheckMapCollisionLeft(CollisionMapInfo& info){
 		info.hitWall = true;
 	}
 }
+
+Vector3 Player::CornerPosition(const Vector3& center,Corner corner){
+	Vector3 offsetTable[] = {
+		{+kWidth / 2.0f, -kHeight / 2.0f, 0},
+		{-kWidth / 2.0f, -kHeight / 2.0f, 0},
+		{+kWidth / 2.0f, +kHeight / 2.0f, 0},
+		{-kWidth / 2.0f, +kHeight / 2.0f, 0}
+	};
+	return center + offsetTable[static_cast<uint32_t>(corner)];
+}
+
+Vector3 Player::GetWorldPosition() const{
+	return {
+		worldTransform_.matWorld_.m[3][0],
+		worldTransform_.matWorld_.m[3][1],
+		worldTransform_.matWorld_.m[3][2]
+	};
+}
+
+AABB Player::GetAABB(){
+	Vector3 worldPos = GetWorldPosition();
+	AABB aabb;
+	aabb.min = {worldPos.x - kWidth / 2.0f, worldPos.y - kHeight / 2.0f, worldPos.z - kWidth / 2.0f};
+	aabb.max = {worldPos.x + kWidth / 2.0f, worldPos.y + kHeight / 2.0f, worldPos.z + kWidth / 2.0f};
+	return aabb;
+}
+
+// Player.cpp の一番下に追加
+
+// =================================================================
+// 以下の関数が抜けていたので追加してください
+// =================================================================
 
 // 壁張り付き・接地状態の更新
 void Player::UpdateOnGround(const CollisionMapInfo& info){
@@ -593,33 +597,4 @@ void Player::UpdateOnWall(const CollisionMapInfo& info){
 	if(info.hitWall){
 		velocity_.x *= (1.0f - kAttenuationWall);
 	}
-}
-
-// -------------------------------------------------------------
-// ユーティリティ
-// -------------------------------------------------------------
-Vector3 Player::CornerPosition(const Vector3& center,Corner corner){
-	Vector3 offsetTable[] = {
-		{+kWidth / 2.0f, -kHeight / 2.0f, 0}, // kRightBottom
-		{-kWidth / 2.0f, -kHeight / 2.0f, 0}, // kLeftBottom
-		{+kWidth / 2.0f, +kHeight / 2.0f, 0}, // kRightTop
-		{-kWidth / 2.0f, +kHeight / 2.0f, 0}  // kLeftTop
-	};
-	return center + offsetTable[static_cast<uint32_t>(corner)];
-}
-
-Vector3 Player::GetWorldPosition() const{
-	return {
-		worldTransform_.matWorld_.m[3][0],
-		worldTransform_.matWorld_.m[3][1],
-		worldTransform_.matWorld_.m[3][2]
-	};
-}
-
-AABB Player::GetAABB(){
-	Vector3 worldPos = GetWorldPosition();
-	AABB aabb;
-	aabb.min = {worldPos.x - kWidth / 2.0f, worldPos.y - kHeight / 2.0f, worldPos.z - kWidth / 2.0f};
-	aabb.max = {worldPos.x + kWidth / 2.0f, worldPos.y + kHeight / 2.0f, worldPos.z + kWidth / 2.0f};
-	return aabb;
 }
