@@ -51,6 +51,15 @@ public:
 	// ★追加: 外部からタイプを確認する用 (クリア判定などで使用)
 	Type GetType() const{ return type_; }
 
+	bool IsTimeToFire();
+
+
+	void SetScale(const Vector3& scale){ worldTransform_.scale_ = scale; }
+
+	// 今のサイズ（半径として使う用）を取得する関数
+	float GetRadius() const{ return worldTransform_.scale_.x; }
+
+
 private:
 	// 02_09 6枚目 ザ・ワールド
 	WorldTransform worldTransform_;
@@ -101,4 +110,6 @@ private:
 
 	// ★追加: 色変え用の変数 (カカシとボスを見分けるため)
 	KamataEngine::ObjectColor objectColor_;
+
+	int fireTimer_ = 0;
 };

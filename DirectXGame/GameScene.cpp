@@ -2,6 +2,9 @@
 #include "Math.h"
 #include "ParticleManager.h"
 #include "BossEffectSystem.h"
+#include "WallHitEffectSystem.h"
+#include <windows.h>
+#include <string>
 
 // ==========================================
 // GameSceneの実装
@@ -23,7 +26,6 @@ GameScene::~GameScene(){
 	// モデル類
 	delete model_;
 	delete modelArrow_;
-	delete modelEnemy_;
 	delete modelBoss_;
 	delete modelBlock_;
 	delete modelSkydome_;
@@ -81,15 +83,18 @@ void GameScene::Initialize(){
 
 	// マップ読み込み
 	mapChipField_ = new MapChipField;
-	mapChipField_->LoadMapChipCsv("Resources/MapChip.csv");
+	// ★CSVから読み込み (MapChip2.csv のままでOKです)
+	mapChipField_->LoadMapChipCsv("Resources/MapChip2.csv");
+
 	modelBlock_ = Model::CreateFromOBJ("block");
-	GenerateBlocks();
+	GenerateBlocks(); // ブロック配置
 
 	// プレイヤー生成
 	player_ = new Player();
 	modelPlayer_ = Model::CreateFromOBJ("player");
 	modelAttack_ = Model::CreateFromOBJ("attack_effect");
-	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(26,18);
+	// プレイヤーの初期位置も、必要ならCSVから読み取るように改造できますが、一旦このままで
+	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(5,18);
 
 	player_->SetMapChipField(mapChipField_);
 	player_->Initialize(modelPlayer_,modelAttack_,&camera_,playerPosition);
@@ -104,22 +109,13 @@ void GameScene::Initialize(){
 	cameraController_->SetMovableArea(cameraArea);
 
 	// --- 敵の生成 ---
-	modelEnemy_ = Model::CreateFromOBJ("kakashi");
 	modelBoss_ = Model::CreateFromOBJ("enemy");
 
-	// 1. カカシ (練習用)
-	Enemy* scarecrow = new Enemy();
-	Vector3 posScarecrow = mapChipField_->GetMapChipPositionByIndex(20,18);
-	scarecrow->Initialize(modelEnemy_,&camera_,posScarecrow,Enemy::Type::kScarecrow);
-	scarecrow->SetGameScene(this);
-	enemies_.push_back(scarecrow);
+	// ===========================================================
+	// ★変更: 手動配置コードを削除し、CSVから自動生成するように変更
+	// ===========================================================
+	GenerateEnemies();
 
-	// 2. ボス (本番用)
-	Enemy* boss = new Enemy();
-	Vector3 posBoss = mapChipField_->GetMapChipPositionByIndex(35,18);
-	boss->Initialize(modelBoss_,&camera_,posBoss,Enemy::Type::kBoss);
-	boss->SetGameScene(this);
-	enemies_.push_back(boss);
 
 	// --- エフェクト・UI関連 ---
 	modelDeathEffect_ = Model::CreateFromOBJ("deathParticle");
@@ -145,6 +141,7 @@ void GameScene::Initialize(){
 	// シーンごとにリセットするならモデルの再登録などが必要
 	// ParticleManager::GetInstance()->Initialize(); // mainで呼んでいれば不要
 	ParticleManager::GetInstance()->GetBossEffectSystem()->Initialize(modelParticle_);
+	ParticleManager::GetInstance()->GetWallHitEffectSystem()->Initialize(modelParticle_);
 }
 
 // --- フェーズ遷移管理 ---
@@ -318,37 +315,30 @@ void GameScene::UpdateGameObjects(){
 		beams_.push_back(newBeam);
 	}
 
-	if(rand() % 300 == 0){
-		// ボスを探す
-		for(Enemy* enemy : enemies_){
-			if(enemy->GetType() == Enemy::Type::kBoss){
+	for(Enemy* enemy : enemies_){
+		// ボスタイプ、かつ、敵ごとのタイマーが0になったら
+		if(enemy->GetType() == Enemy::Type::kBoss && enemy->IsTimeToFire()){
 
-				// 弾を生成
-				Beam* newBullet = new Beam();
-				Vector3 bossPos = enemy->GetWorldPosition();
+			// ★ここから下は前のコードと同じ（ビーム生成）
+			Beam* newBullet = new Beam();
+			Vector3 bossPos = enemy->GetWorldPosition();
+			Vector3 targetPos = player_->GetWorldPosition();
+			Vector3 velocity = targetPos - bossPos;
 
-				// プレイヤーに向かうベクトルを計算（狙い撃ち）
-				Vector3 targetPos = player_->GetWorldPosition();
-				Vector3 velocity = targetPos - bossPos;
-
-				// 正規化（長さを1にする）して、スピード(0.3)を掛ける
-				float len = sqrt(velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z);
-				if(len > 0.0f){
-					velocity.x /= len;
-					velocity.y /= len;
-					velocity.z /= len;
-				}
-				Vector3 speed = {velocity.x * 0.3f, velocity.y * 0.3f, velocity.z * 0.3f};
-
-				// 生成してリストに追加
-				newBullet->Initialize(modelBeam_,bossPos,speed);
-				newBullet->SetIsEnemy(true);
-
-				beams_.push_back(newBullet);
+			float len = sqrt(velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z);
+			if(len > 0.0f){
+				velocity.x /= len;
+				velocity.y /= len;
+				velocity.z /= len;
 			}
+			Vector3 speed = {velocity.x * 0.3f, velocity.y * 0.3f, velocity.z * 0.3f};
+
+			newBullet->Initialize(modelBeam_,bossPos,speed);
+			newBullet->SetIsEnemy(true);
+
+			beams_.push_back(newBullet);
 		}
 	}
-
 
 	for(Beam* beam : beams_){
 		beam->Update();
@@ -413,7 +403,7 @@ void GameScene::CheckAllCollisions(){
 
 	AABB aabb1,aabb2;
 
-	// --- 1. 自キャラ vs 敵キャラ ---
+	// --- 1. 自キャラ vs 敵キャラ (体当たり) ---
 	{
 		aabb1 = player_->GetAABB();
 		for(Enemy* enemy : enemies_){
@@ -427,11 +417,54 @@ void GameScene::CheckAllCollisions(){
 		}
 	}
 
-	// --- 2. ビーム vs 敵 ---
+	for(auto it = beams_.begin(); it != beams_.end(); ){
+		Beam* beam = *it;
+		Vector3 bPos = beam->GetWorldPosition();
+		bool hitWall = false;
+
+		// 全ブロックと総当たりチェック
+		// ブロックのリスト(worldTransformBlocks_)を使って判定します
+		for(auto& line : worldTransformBlocks_){
+			for(WorldTransform* block : line){
+				if(!block) continue; // ブロックがない場所はスキップ
+
+				// ブロックの範囲 (中心から半径0.5の箱とみなす)
+				float minX = block->translation_.x - 0.5f;
+				float maxX = block->translation_.x + 0.5f;
+				float minY = block->translation_.y - 0.5f;
+				float maxY = block->translation_.y + 0.5f;
+				float minZ = block->translation_.z - 0.5f;
+				float maxZ = block->translation_.z + 0.5f;
+
+				// ビームがブロックの中にあるか？
+				if(bPos.x >= minX && bPos.x <= maxX &&
+					bPos.y >= minY && bPos.y <= maxY &&
+					bPos.z >= minZ && bPos.z <= maxZ){
+
+					hitWall = true;
+
+					// 壁ヒットエフェクト発生（もしエラーが出るならこの行は消してください）
+					ParticleManager::GetInstance()->GetWallHitEffectSystem()->Spawn(bPos);
+
+					break;
+				}
+			}
+			if(hitWall) break;
+		}
+
+		if(hitWall){
+			delete beam;
+			it = beams_.erase(it); // ビーム削除
+		} else{
+			++it; // 次のビームへ
+		}
+	}
+
+	// --- 2. ビーム(プレイヤーの攻撃) vs 敵 ---
 	for(auto itBeam = beams_.begin(); itBeam != beams_.end(); ++itBeam){
 		Beam* beam = *itBeam;
 		if(beam->IsEnemy()){
-			continue;
+			continue; // 敵の弾ならスキップ（自爆防止）
 		}
 
 		for(Enemy* enemy : enemies_){
@@ -440,26 +473,24 @@ void GameScene::CheckAllCollisions(){
 			Vector3 posB = enemy->GetWorldPosition();
 			Vector3 diff = posA - posB;
 			float distSq = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
-			float r = beam->GetRadius() + 1.0f; // 敵の半径(仮) + ビーム半径
-
+			float r = beam->GetRadius() + enemy->GetRadius();
 			if(distSq <= r * r){
 				// ヒット処理
 				beam->OnCollision();         // ビーム消滅
-				enemy->OnCollision(player_); // 敵へダメージ通知（引数は攻撃元情報としてplayerを渡す）
+				enemy->OnCollision(player_); // 敵へダメージ通知
 
 				// ヒットエフェクト発生
 				CreateEffect(posB);
-				break; // ビームは貫通せず、1体に当たったら消える
+				break; // 1体に当たったら消える
 			}
 		}
 	}
 
-	if(player_->IsInhaling()){ // プレイヤーが口を開けているか？
+	// --- 3. 吸い込み判定 (プレイヤーの口 vs 敵の弾) ---
+	if(player_->IsInhaling()){
 
-		// プレイヤーの吸い込み範囲を取得
 		AABB inhaleArea = player_->GetInhaleArea();
 
-		// 飛んでいるビームを全チェック
 		for(auto it = beams_.begin(); it != beams_.end(); ){
 			Beam* beam = *it;
 			Vector3 bPos = beam->GetWorldPosition();
@@ -470,15 +501,10 @@ void GameScene::CheckAllCollisions(){
 				bPos.z >= inhaleArea.min.z && bPos.z <= inhaleArea.max.z){
 
 				// ★吸い込み成功！
-
-				// 1. 弾を消す
 				delete beam;
 				it = beams_.erase(it);
 
-				// 2. プレイヤーを「満腹」にする
-				player_->CatchAmmo();
-
-				// 1フレームに1個吸えば十分なのでループを抜ける
+				player_->CatchAmmo(); // 満腹にする
 				break;
 			} else{
 				++it;
@@ -486,4 +512,66 @@ void GameScene::CheckAllCollisions(){
 		}
 	}
 
+	// --- 4. 敵の弾 vs プレイヤー本体 (ダメージ判定) ---
+	AABB playerBodyBox = player_->GetAABB();
+
+	for(auto it = beams_.begin(); it != beams_.end(); ){
+		Beam* beam = *it;
+
+		// 1. 敵の弾じゃなければ無視
+		if(!beam->IsEnemy()){
+			++it;
+			continue;
+		}
+
+		// 2. 当たり判定（プレイヤーの体の中に弾があるか？）
+		Vector3 bPos = beam->GetWorldPosition();
+		if(bPos.x >= playerBodyBox.min.x && bPos.x <= playerBodyBox.max.x &&
+			bPos.y >= playerBodyBox.min.y && bPos.y <= playerBodyBox.max.y &&
+			bPos.z >= playerBodyBox.min.z && bPos.z <= playerBodyBox.max.z){
+
+			// ★ヒット！ダメージ！
+			player_->OnCollision((Enemy*)nullptr);
+
+			delete beam;
+			it = beams_.erase(it);
+		} else{
+			++it;
+		}
+	}
+}
+
+void GameScene::GenerateEnemies(){
+	uint32_t numBlockVirtical = mapChipField_->GetNumBlockVirtical();
+	uint32_t numBlockHorizontal = mapChipField_->GetNumBlockHorizontal();
+
+	for(uint32_t i = 0; i < numBlockVirtical; ++i){
+		for(uint32_t j = 0; j < numBlockHorizontal; ++j){
+
+			// マップチップの種類を取得
+			MapChipType type = mapChipField_->GetMapChipTypeByIndex(j,i);
+
+			// ★修正：数字(10)ではなく、名前(kZako)で判定する
+			if(type == MapChipType::kZako || type == MapChipType::kBoss){
+
+				Enemy* newEnemy = new Enemy();
+				Vector3 pos = mapChipField_->GetMapChipPositionByIndex(j,i);
+
+				// ボスかザコかを判定
+				Enemy::Type enemyType = (type == MapChipType::kBoss)?Enemy::Type::kBoss:Enemy::Type::kBoss;
+
+				newEnemy->Initialize(modelBoss_,&camera_,pos,enemyType);
+
+				if(type == MapChipType::kBoss){
+					newEnemy->SetScale({3.0f, 3.0f, 3.0f});
+				} else{
+					// ザコは標準サイズ
+					newEnemy->SetScale({1.2f, 1.2f, 1.2f});
+				}
+
+				newEnemy->SetGameScene(this);
+				enemies_.push_back(newEnemy);
+			}
+		}
+	}
 }
