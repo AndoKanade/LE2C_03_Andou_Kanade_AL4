@@ -2,8 +2,10 @@ root = true
 
 [*.{cpp,h,hpp}]
 charset = utf-8
-indent_style = tab
-indent_size = 4
-end_of_line = crlf
-trim_trailing_whitespace = true
-insert_final_newline = true
+Å@
+spelling_error_severity=error
+
+spellingChekable_types= identifiers,comments
+spelling_languagers=en-us
+spelling_use_default_exclusion_dictionary=true
+spelling_exclusion_path= ./exclusion.dic
