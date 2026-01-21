@@ -17,6 +17,8 @@ void Enemy::Initialize(Model* model,Camera* camera,const Vector3& position,Type 
 	worldTransform_.translation_ = position;
 	worldTransform_.rotation_.y = std::numbers::pi_v<float> *3.0f / 2.0f;
 
+	fireTimer_ = 120 + (rand() % 180);
+
 	// ★追加: タイプごとの設定
 	objectColor_.Initialize(); // 色用
 
@@ -140,4 +142,25 @@ Vector3 Enemy::GetWorldPosition(){
 	worldPos.z = worldTransform_.matWorld_.m[3][2];
 
 	return worldPos;
+}
+
+bool Enemy::IsTimeToFire() {
+	// 既に死んでいたら撃たない
+	if (behavior_ == Behavior::kDefeated) {
+		return false;
+	}
+
+	// タイマーを減らす
+	fireTimer_--;
+
+	// タイマーが0になったら発射！
+	if (fireTimer_ <= 0) {
+		// 次の発射までの時間をセット (ここも少しランダムにするとさらに良い)
+		// 例: 120フレーム(2秒) + ランダム60フレーム(1秒)
+		fireTimer_ = 120 + (rand() % 60);
+		
+		return true; // 「撃ってよし！」と返す
+	}
+
+	return false; // まだ待ち
 }

@@ -43,6 +43,8 @@ private:
 	// マップブロック生成
 	void GenerateBlocks();
 
+	void GenerateEnemies();
+
 	// 全衝突判定
 	void CheckAllCollisions();
 

@@ -3,6 +3,8 @@
 #include "ParticleManager.h"
 #include "BossEffectSystem.h"
 #include "WallHitEffectSystem.h"
+#include <windows.h>
+#include <string>
 
 // ==========================================
 // GameSceneの実装
@@ -81,14 +83,17 @@ void GameScene::Initialize(){
 
 	// マップ読み込み
 	mapChipField_ = new MapChipField;
+	// ★CSVから読み込み (MapChip2.csv のままでOKです)
 	mapChipField_->LoadMapChipCsv("Resources/MapChip2.csv");
+
 	modelBlock_ = Model::CreateFromOBJ("block");
-	GenerateBlocks();
+	GenerateBlocks(); // ブロック配置
 
 	// プレイヤー生成
 	player_ = new Player();
 	modelPlayer_ = Model::CreateFromOBJ("player");
 	modelAttack_ = Model::CreateFromOBJ("attack_effect");
+	// プレイヤーの初期位置も、必要ならCSVから読み取るように改造できますが、一旦このままで
 	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(5,18);
 
 	player_->SetMapChipField(mapChipField_);
@@ -106,33 +111,11 @@ void GameScene::Initialize(){
 	// --- 敵の生成 ---
 	modelBoss_ = Model::CreateFromOBJ("enemy");
 
-	float wallX = mapChipField_->GetMapChipPositionByIndex(15,0).x;
+	// ===========================================================
+	// ★変更: 手動配置コードを削除し、CSVから自動生成するように変更
+	// ===========================================================
+	GenerateEnemies();
 
-	// 縦に3体並べるループ
-	for(int i = 0; i < 3; ++i){
-		Enemy* zako = new Enemy();
-
-		// Y座標をずらす（上段、中段、下段）
-		// マップの真ん中(高さ10)を中心に、2マスずつ空けて配置
-		int gridY = 14 + i * 2; // グリッド座標で 8, 10, 12 の位置
-
-		Vector3 posZako = mapChipField_->GetMapChipPositionByIndex(0,gridY);
-		posZako.x = wallX; // X座標を「壁」の位置に上書き
-
-		// モデルはボスと同じものを使い回す
-		// タイプも一旦「kBoss」にしておく（これで勝手に弾を撃ってくれる）
-		zako->Initialize(modelBoss_,&camera_,posZako,Enemy::Type::kBoss);
-		zako->SetGameScene(this);
-		enemies_.push_back(zako);
-	}
-
-
-	// 2. ボス (本番用)
-	Enemy* boss = new Enemy();
-	Vector3 posBoss = mapChipField_->GetMapChipPositionByIndex(35,18);
-	boss->Initialize(modelBoss_,&camera_,posBoss,Enemy::Type::kBoss);
-	boss->SetGameScene(this);
-	enemies_.push_back(boss);
 
 	// --- エフェクト・UI関連 ---
 	modelDeathEffect_ = Model::CreateFromOBJ("deathParticle");
@@ -332,37 +315,30 @@ void GameScene::UpdateGameObjects(){
 		beams_.push_back(newBeam);
 	}
 
-	if(rand() % 300 == 0){
-		// ボスを探す
-		for(Enemy* enemy : enemies_){
-			if(enemy->GetType() == Enemy::Type::kBoss){
+	for(Enemy* enemy : enemies_){
+		// ボスタイプ、かつ、敵ごとのタイマーが0になったら
+		if(enemy->GetType() == Enemy::Type::kBoss && enemy->IsTimeToFire()){
 
-				// 弾を生成
-				Beam* newBullet = new Beam();
-				Vector3 bossPos = enemy->GetWorldPosition();
+			// ★ここから下は前のコードと同じ（ビーム生成）
+			Beam* newBullet = new Beam();
+			Vector3 bossPos = enemy->GetWorldPosition();
+			Vector3 targetPos = player_->GetWorldPosition();
+			Vector3 velocity = targetPos - bossPos;
 
-				// プレイヤーに向かうベクトルを計算（狙い撃ち）
-				Vector3 targetPos = player_->GetWorldPosition();
-				Vector3 velocity = targetPos - bossPos;
-
-				// 正規化（長さを1にする）して、スピード(0.3)を掛ける
-				float len = sqrt(velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z);
-				if(len > 0.0f){
-					velocity.x /= len;
-					velocity.y /= len;
-					velocity.z /= len;
-				}
-				Vector3 speed = {velocity.x * 0.3f, velocity.y * 0.3f, velocity.z * 0.3f};
-
-				// 生成してリストに追加
-				newBullet->Initialize(modelBeam_,bossPos,speed);
-				newBullet->SetIsEnemy(true);
-
-				beams_.push_back(newBullet);
+			float len = sqrt(velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z);
+			if(len > 0.0f){
+				velocity.x /= len;
+				velocity.y /= len;
+				velocity.z /= len;
 			}
+			Vector3 speed = {velocity.x * 0.3f, velocity.y * 0.3f, velocity.z * 0.3f};
+
+			newBullet->Initialize(modelBeam_,bossPos,speed);
+			newBullet->SetIsEnemy(true);
+
+			beams_.push_back(newBullet);
 		}
 	}
-
 
 	for(Beam* beam : beams_){
 		beam->Update();
@@ -441,16 +417,13 @@ void GameScene::CheckAllCollisions(){
 		}
 	}
 
-	// =========================================================
-	// ★追加: 0. ビーム vs ブロック (壁判定)
-	// =========================================================
 	for(auto it = beams_.begin(); it != beams_.end(); ){
 		Beam* beam = *it;
 		Vector3 bPos = beam->GetWorldPosition();
 		bool hitWall = false;
 
 		// 全ブロックと総当たりチェック
-		// (本当はインデックス計算のほうが軽いですが、確実性を重視して座標で判定します)
+		// ブロックのリスト(worldTransformBlocks_)を使って判定します
 		for(auto& line : worldTransformBlocks_){
 			for(WorldTransform* block : line){
 				if(!block) continue; // ブロックがない場所はスキップ
@@ -469,7 +442,10 @@ void GameScene::CheckAllCollisions(){
 					bPos.z >= minZ && bPos.z <= maxZ){
 
 					hitWall = true;
+
+					// 壁ヒットエフェクト発生（もしエラーが出るならこの行は消してください）
 					ParticleManager::GetInstance()->GetWallHitEffectSystem()->Spawn(bPos);
+
 					break;
 				}
 			}
@@ -478,12 +454,11 @@ void GameScene::CheckAllCollisions(){
 
 		if(hitWall){
 			delete beam;
-			it = beams_.erase(it);
+			it = beams_.erase(it); // ビーム削除
 		} else{
-			++it; // 壁に当たってなければ次のチェックへ
+			++it; // 次のビームへ
 		}
 	}
-
 
 	// --- 2. ビーム(プレイヤーの攻撃) vs 敵 ---
 	for(auto itBeam = beams_.begin(); itBeam != beams_.end(); ++itBeam){
@@ -498,8 +473,7 @@ void GameScene::CheckAllCollisions(){
 			Vector3 posB = enemy->GetWorldPosition();
 			Vector3 diff = posA - posB;
 			float distSq = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
-			float r = beam->GetRadius() + 1.0f; // 敵の半径(仮) + ビーム半径
-
+			float r = beam->GetRadius() + enemy->GetRadius();
 			if(distSq <= r * r){
 				// ヒット処理
 				beam->OnCollision();         // ビーム消滅
@@ -563,6 +537,41 @@ void GameScene::CheckAllCollisions(){
 			it = beams_.erase(it);
 		} else{
 			++it;
+		}
+	}
+}
+
+void GameScene::GenerateEnemies(){
+	uint32_t numBlockVirtical = mapChipField_->GetNumBlockVirtical();
+	uint32_t numBlockHorizontal = mapChipField_->GetNumBlockHorizontal();
+
+	for(uint32_t i = 0; i < numBlockVirtical; ++i){
+		for(uint32_t j = 0; j < numBlockHorizontal; ++j){
+
+			// マップチップの種類を取得
+			MapChipType type = mapChipField_->GetMapChipTypeByIndex(j,i);
+
+			// ★修正：数字(10)ではなく、名前(kZako)で判定する
+			if(type == MapChipType::kZako || type == MapChipType::kBoss){
+
+				Enemy* newEnemy = new Enemy();
+				Vector3 pos = mapChipField_->GetMapChipPositionByIndex(j,i);
+
+				// ボスかザコかを判定
+				Enemy::Type enemyType = (type == MapChipType::kBoss)?Enemy::Type::kBoss:Enemy::Type::kBoss;
+
+				newEnemy->Initialize(modelBoss_,&camera_,pos,enemyType);
+
+				if(type == MapChipType::kBoss){
+					newEnemy->SetScale({3.0f, 3.0f, 3.0f});
+				} else{
+					// ザコは標準サイズ
+					newEnemy->SetScale({1.2f, 1.2f, 1.2f});
+				}
+
+				newEnemy->SetGameScene(this);
+				enemies_.push_back(newEnemy);
+			}
 		}
 	}
 }
