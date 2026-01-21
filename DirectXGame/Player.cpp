@@ -395,7 +395,7 @@ void Player::OnCollision(const Enemy* enemy){
 		}
 	}
 
-	// isDead_ = true;
+	 isDead_ = true;
 	isCollisionDisabled_ = true;
 }
 

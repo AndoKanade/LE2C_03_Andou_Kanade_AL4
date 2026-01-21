@@ -101,34 +101,19 @@ void Enemy::Draw(){
 	model_->Draw(worldTransform_,*camera_,&objectColor_);
 }
 
-// OnCollisionの実装 (HP処理)
 void Enemy::OnCollision(const Player* player){
+	// 既に死んでるなら何もしない
 	if(behavior_ == Behavior::kDefeated){
 		return;
 	}
 
-	// エフェクト発生 (共通)
-	if(gameScene_){
-		Vector3 pos = player->GetWorldPosition();
-		Vector3 effectPos = (GetWorldPosition() + pos) * 0.5f;
-		gameScene_->CreateEffect(effectPos);
-	}
+	(void)player; // 警告消し
 
-	// ★追加: カカシならダメージ処理をスキップ
-	if(type_ == Type::kScarecrow){
-		// 何もしない（HP減らない、死なない）
-		// 練習用に「当たった音」や「少し揺れる」などを入れても良い
-		return;
-	}
+	hp_ = 0; // HPを0にする
+	behaviorRequest_ = Behavior::kDefeated; // 即座に死亡状態へ遷移
 
-	// ★追加: ボスならHPを減らす
-	hp_--;
-
-	// HPが尽きたら死亡
-	if(hp_ <= 0){
-		behaviorRequest_ = Behavior::kDefeated;
-		isCollisionDisabled_ = true;
-	}
+	// 当たり判定を無効化（死体に当たらないようにする）
+	isCollisionDisabled_ = true;
 }
 
 // 02_10 スライド14枚目

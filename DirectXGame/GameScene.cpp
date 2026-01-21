@@ -2,6 +2,7 @@
 #include "Math.h"
 #include "ParticleManager.h"
 #include "BossEffectSystem.h"
+#include "WallHitEffectSystem.h"
 
 // ==========================================
 // GameSceneの実装
@@ -23,7 +24,6 @@ GameScene::~GameScene(){
 	// モデル類
 	delete model_;
 	delete modelArrow_;
-	delete modelEnemy_;
 	delete modelBoss_;
 	delete modelBlock_;
 	delete modelSkydome_;
@@ -81,7 +81,7 @@ void GameScene::Initialize(){
 
 	// マップ読み込み
 	mapChipField_ = new MapChipField;
-	mapChipField_->LoadMapChipCsv("Resources/MapChip.csv");
+	mapChipField_->LoadMapChipCsv("Resources/MapChip2.csv");
 	modelBlock_ = Model::CreateFromOBJ("block");
 	GenerateBlocks();
 
@@ -89,7 +89,7 @@ void GameScene::Initialize(){
 	player_ = new Player();
 	modelPlayer_ = Model::CreateFromOBJ("player");
 	modelAttack_ = Model::CreateFromOBJ("attack_effect");
-	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(26,18);
+	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(5,18);
 
 	player_->SetMapChipField(mapChipField_);
 	player_->Initialize(modelPlayer_,modelAttack_,&camera_,playerPosition);
@@ -104,15 +104,28 @@ void GameScene::Initialize(){
 	cameraController_->SetMovableArea(cameraArea);
 
 	// --- 敵の生成 ---
-	modelEnemy_ = Model::CreateFromOBJ("kakashi");
 	modelBoss_ = Model::CreateFromOBJ("enemy");
 
-	// 1. カカシ (練習用)
-	Enemy* scarecrow = new Enemy();
-	Vector3 posScarecrow = mapChipField_->GetMapChipPositionByIndex(20,18);
-	scarecrow->Initialize(modelEnemy_,&camera_,posScarecrow,Enemy::Type::kScarecrow);
-	scarecrow->SetGameScene(this);
-	enemies_.push_back(scarecrow);
+	float wallX = mapChipField_->GetMapChipPositionByIndex(15,0).x;
+
+	// 縦に3体並べるループ
+	for(int i = 0; i < 3; ++i){
+		Enemy* zako = new Enemy();
+
+		// Y座標をずらす（上段、中段、下段）
+		// マップの真ん中(高さ10)を中心に、2マスずつ空けて配置
+		int gridY = 14 + i * 2; // グリッド座標で 8, 10, 12 の位置
+
+		Vector3 posZako = mapChipField_->GetMapChipPositionByIndex(0,gridY);
+		posZako.x = wallX; // X座標を「壁」の位置に上書き
+
+		// モデルはボスと同じものを使い回す
+		// タイプも一旦「kBoss」にしておく（これで勝手に弾を撃ってくれる）
+		zako->Initialize(modelBoss_,&camera_,posZako,Enemy::Type::kBoss);
+		zako->SetGameScene(this);
+		enemies_.push_back(zako);
+	}
+
 
 	// 2. ボス (本番用)
 	Enemy* boss = new Enemy();
@@ -145,6 +158,7 @@ void GameScene::Initialize(){
 	// シーンごとにリセットするならモデルの再登録などが必要
 	// ParticleManager::GetInstance()->Initialize(); // mainで呼んでいれば不要
 	ParticleManager::GetInstance()->GetBossEffectSystem()->Initialize(modelParticle_);
+	ParticleManager::GetInstance()->GetWallHitEffectSystem()->Initialize(modelParticle_);
 }
 
 // --- フェーズ遷移管理 ---
@@ -413,7 +427,7 @@ void GameScene::CheckAllCollisions(){
 
 	AABB aabb1,aabb2;
 
-	// --- 1. 自キャラ vs 敵キャラ ---
+	// --- 1. 自キャラ vs 敵キャラ (体当たり) ---
 	{
 		aabb1 = player_->GetAABB();
 		for(Enemy* enemy : enemies_){
@@ -427,11 +441,55 @@ void GameScene::CheckAllCollisions(){
 		}
 	}
 
-	// --- 2. ビーム vs 敵 ---
+	// =========================================================
+	// ★追加: 0. ビーム vs ブロック (壁判定)
+	// =========================================================
+	for(auto it = beams_.begin(); it != beams_.end(); ){
+		Beam* beam = *it;
+		Vector3 bPos = beam->GetWorldPosition();
+		bool hitWall = false;
+
+		// 全ブロックと総当たりチェック
+		// (本当はインデックス計算のほうが軽いですが、確実性を重視して座標で判定します)
+		for(auto& line : worldTransformBlocks_){
+			for(WorldTransform* block : line){
+				if(!block) continue; // ブロックがない場所はスキップ
+
+				// ブロックの範囲 (中心から半径0.5の箱とみなす)
+				float minX = block->translation_.x - 0.5f;
+				float maxX = block->translation_.x + 0.5f;
+				float minY = block->translation_.y - 0.5f;
+				float maxY = block->translation_.y + 0.5f;
+				float minZ = block->translation_.z - 0.5f;
+				float maxZ = block->translation_.z + 0.5f;
+
+				// ビームがブロックの中にあるか？
+				if(bPos.x >= minX && bPos.x <= maxX &&
+					bPos.y >= minY && bPos.y <= maxY &&
+					bPos.z >= minZ && bPos.z <= maxZ){
+
+					hitWall = true;
+					ParticleManager::GetInstance()->GetWallHitEffectSystem()->Spawn(bPos);
+					break;
+				}
+			}
+			if(hitWall) break;
+		}
+
+		if(hitWall){
+			delete beam;
+			it = beams_.erase(it);
+		} else{
+			++it; // 壁に当たってなければ次のチェックへ
+		}
+	}
+
+
+	// --- 2. ビーム(プレイヤーの攻撃) vs 敵 ---
 	for(auto itBeam = beams_.begin(); itBeam != beams_.end(); ++itBeam){
 		Beam* beam = *itBeam;
 		if(beam->IsEnemy()){
-			continue;
+			continue; // 敵の弾ならスキップ（自爆防止）
 		}
 
 		for(Enemy* enemy : enemies_){
@@ -445,21 +503,20 @@ void GameScene::CheckAllCollisions(){
 			if(distSq <= r * r){
 				// ヒット処理
 				beam->OnCollision();         // ビーム消滅
-				enemy->OnCollision(player_); // 敵へダメージ通知（引数は攻撃元情報としてplayerを渡す）
+				enemy->OnCollision(player_); // 敵へダメージ通知
 
 				// ヒットエフェクト発生
 				CreateEffect(posB);
-				break; // ビームは貫通せず、1体に当たったら消える
+				break; // 1体に当たったら消える
 			}
 		}
 	}
 
-	if(player_->IsInhaling()){ // プレイヤーが口を開けているか？
+	// --- 3. 吸い込み判定 (プレイヤーの口 vs 敵の弾) ---
+	if(player_->IsInhaling()){
 
-		// プレイヤーの吸い込み範囲を取得
 		AABB inhaleArea = player_->GetInhaleArea();
 
-		// 飛んでいるビームを全チェック
 		for(auto it = beams_.begin(); it != beams_.end(); ){
 			Beam* beam = *it;
 			Vector3 bPos = beam->GetWorldPosition();
@@ -470,15 +527,10 @@ void GameScene::CheckAllCollisions(){
 				bPos.z >= inhaleArea.min.z && bPos.z <= inhaleArea.max.z){
 
 				// ★吸い込み成功！
-
-				// 1. 弾を消す
 				delete beam;
 				it = beams_.erase(it);
 
-				// 2. プレイヤーを「満腹」にする
-				player_->CatchAmmo();
-
-				// 1フレームに1個吸えば十分なのでループを抜ける
+				player_->CatchAmmo(); // 満腹にする
 				break;
 			} else{
 				++it;
@@ -486,4 +538,31 @@ void GameScene::CheckAllCollisions(){
 		}
 	}
 
+	// --- 4. 敵の弾 vs プレイヤー本体 (ダメージ判定) ---
+	AABB playerBodyBox = player_->GetAABB();
+
+	for(auto it = beams_.begin(); it != beams_.end(); ){
+		Beam* beam = *it;
+
+		// 1. 敵の弾じゃなければ無視
+		if(!beam->IsEnemy()){
+			++it;
+			continue;
+		}
+
+		// 2. 当たり判定（プレイヤーの体の中に弾があるか？）
+		Vector3 bPos = beam->GetWorldPosition();
+		if(bPos.x >= playerBodyBox.min.x && bPos.x <= playerBodyBox.max.x &&
+			bPos.y >= playerBodyBox.min.y && bPos.y <= playerBodyBox.max.y &&
+			bPos.z >= playerBodyBox.min.z && bPos.z <= playerBodyBox.max.z){
+
+			// ★ヒット！ダメージ！
+			player_->OnCollision((Enemy*)nullptr);
+
+			delete beam;
+			it = beams_.erase(it);
+		} else{
+			++it;
+		}
+	}
 }

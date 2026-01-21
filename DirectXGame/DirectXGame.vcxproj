@@ -124,6 +124,7 @@
     <ClCompile Include="RuleScene.cpp" />
     <ClCompile Include="Skydome.cpp" />
     <ClCompile Include="TitleScene.cpp" />
+    <ClCompile Include="WallHitEffectSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\TerrainPS.hlsl">
@@ -219,6 +220,7 @@
     <ClInclude Include="RuleScene.h" />
     <ClInclude Include="Skydome.h" />
     <ClInclude Include="TitleScene.h" />
+    <ClInclude Include="WallHitEffectSystem.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
