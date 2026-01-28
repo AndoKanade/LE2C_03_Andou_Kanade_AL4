@@ -4,6 +4,9 @@ RuleScene::~RuleScene(){
 	// スプライトとフェードの削除
 	delete sprite_;
 	delete fade_;
+	if(Audio::GetInstance()->IsPlaying(bgmHandle_)){
+		Audio::GetInstance()->StopWave(bgmHandle_);
+	}
 }
 
 void RuleScene::Initialize(){
@@ -20,6 +23,9 @@ void RuleScene::Initialize(){
 
 	// フェードイン開始
 	fade_->Start(Fade::Status::FadeIn,1.0f);
+
+	bgmDataHandle_ = Audio::GetInstance()->LoadWave("BGM/ruleScene.wav");
+	seDataHandle_ = Audio::GetInstance()->LoadWave("SE/enter.wav");
 }
 
 void RuleScene::Update(){
@@ -30,6 +36,7 @@ void RuleScene::Update(){
 
 		if(fade_->IsFinished()){
 			phase_ = Phase::kMain;
+			PlayBgm();
 		}
 		break;
 	case Phase::kMain:
@@ -37,6 +44,7 @@ void RuleScene::Update(){
 		if(Input::GetInstance()->PushKey(DIK_SPACE)){
 			fade_->Start(Fade::Status::FadeOut,1.0f);
 			phase_ = Phase::kFadeOut;
+			PlaySe();
 		}
 		break;
 	case Phase::kFadeOut:
@@ -67,4 +75,18 @@ void RuleScene::Draw(){
 
 	// フェードの描画 (最前面)
 	fade_->Draw();
+}
+
+void RuleScene::PlayBgm(){
+	if(!isPlayBgm_){
+		bgmHandle_ = Audio::GetInstance()->PlayWave(bgmDataHandle_,true,0.2f);
+		isPlayBgm_ = true;
+	}
+}
+
+void RuleScene::PlaySe(){
+	if(!isPlaySe_){
+		seHandle_ = Audio::GetInstance()->PlayWave(seDataHandle_,false,0.3f);
+		isPlaySe_ = true;
+	}
 }

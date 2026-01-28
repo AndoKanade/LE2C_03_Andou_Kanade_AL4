@@ -32,6 +32,8 @@ public:
 	// --- 状態取得 ---
 	bool IsFinished() const{ return finished_; }
 
+	bool IsClear() const{ return isClear_; }
+
 	// エフェクト生成ヘルパー
 	void CreateEffect(const Vector3& position);
 private:
@@ -111,4 +113,6 @@ private:
 	// 音声ハンドル
 	uint32_t soundDataHandle_ = 0;
 	uint32_t voiceHandle_ = 0;
+
+	bool isClear_ = false;
 };

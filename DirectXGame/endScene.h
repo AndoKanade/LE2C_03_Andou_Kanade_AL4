@@ -22,6 +22,9 @@ public:
 
 	bool IsFinished() const { return finished_; }
 
+	void PlayBgm();
+	void PlaySe();
+
 private:
 	static inline const float kTimeTitleMove = 2.0f;
 
@@ -38,4 +41,13 @@ private:
 	Fade* fade_ = nullptr;
 
 	Phase phase_ = Phase::kFadeIn;
+
+	uint32_t bgmDataHandle_;
+	uint32_t bgmHandle_;
+	bool isPlayBgm_ = false;
+
+	uint32_t seDataHandle_;
+	uint32_t seHandle_;
+	bool isPlaySe_ = false;
+
 };
