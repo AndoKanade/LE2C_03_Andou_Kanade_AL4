@@ -241,7 +241,8 @@ void GameScene::Update(){
 			}
 			// ボスがいなければクリアへ
 			if(!isBossAlive){
-				phase_ = Phase::kFadeOut;
+			phase_ = Phase::kFadeOut;
+			fade_->Start(Fade::Status::FadeOut, 1.0f);
 			}
 		}
 
@@ -259,11 +260,28 @@ void GameScene::Update(){
 			deathParticles_->Update();
 		}
 		break;
-
 	case Phase::kFadeOut:
 		fade_->Update();
 		if(fade_->IsFinished()){
-			finished_ = true; // メインループへ終了通知
+
+			// 1. ボスがまだ生きてるかチェック
+			bool isBossAlive = false;
+			for(Enemy* enemy : enemies_){
+				if(enemy->GetType() == Enemy::Type::kBoss){
+					isBossAlive = true;
+					break;
+				}
+			}
+
+			if(isBossAlive){
+				// ボスが生きてる ＝ 死んで終わった ＝ リトライ
+				isClear_ = false; // クリアじゃない！
+				finished_ = true; // 終了合図
+			} else{
+				// ボスがいない ＝ 倒して終わった ＝ クリア
+				isClear_ = true;  // クリア！
+				finished_ = true; // 終了合図
+			}
 		}
 		UpdateGameObjects();
 		break;
@@ -331,7 +349,7 @@ void GameScene::UpdateGameObjects(){
 				velocity.y /= len;
 				velocity.z /= len;
 			}
-			Vector3 speed = {velocity.x * 0.3f, velocity.y * 0.3f, velocity.z * 0.3f};
+			Vector3 speed = {velocity.x * 0.1f, velocity.y * 0.1f, velocity.z * 0.1f};
 
 			newBullet->Initialize(modelBeam_,bossPos,speed);
 			newBullet->SetIsEnemy(true);

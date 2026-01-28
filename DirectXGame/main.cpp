@@ -51,13 +51,29 @@ void ChangeScene() {
 
 	case Scene::kGame:
 
-		if (gameScene->IsFinished()) {
-			// シーン変更
-			scene = Scene::kEnd;
+		if(gameScene->IsFinished()){
+			// ★ここが変更ポイント★
+
+			// 1. ゲームシーンを消す前に「クリアした？」と結果を聞く
+			// (GameScene.h に IsClear() を作っておく必要があります)
+			bool isGameClear = gameScene->IsClear();
+
+			// 2. 古いシーンを削除
 			delete gameScene;
 			gameScene = nullptr;
-			endScene = new EndScene;
-			endScene->Initialize();
+
+			// 3. 結果によって行き先を変える
+			if(isGameClear){
+				// クリアした → エンディングへ
+				scene = Scene::kEnd;
+				endScene = new EndScene;
+				endScene->Initialize();
+			} else{
+				// 死んで終わった → もう一度ゲームシーンへ (リトライ)
+				scene = Scene::kGame;
+				gameScene = new GameScene;
+				gameScene->Initialize();
+			}
 		}
 		break;
 	case Scene::kEnd:
