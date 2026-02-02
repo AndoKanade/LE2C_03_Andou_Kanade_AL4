@@ -6,6 +6,13 @@ TitleScene::~TitleScene() {
 	delete modelPlayer_;
 	delete modelTitle_;
 	delete fade_;
+
+	Audio* audio = Audio::GetInstance();
+	if(audio != nullptr){ // ヌルチェックを追加
+		if(audio->IsPlaying(bgmHandle_)){
+			audio->StopWave(bgmHandle_);
+		}
+	}
 }
 
 void TitleScene::Initialize() {
@@ -38,6 +45,9 @@ void TitleScene::Initialize() {
 	fade_->Initialize();
 
 	fade_->Start(Fade::Status::FadeIn, 1.0f);
+
+	bgmDataHandle_ = Audio::GetInstance()->LoadWave("BGM/titleScene.wav");
+	seDataHandle_ = Audio::GetInstance()->LoadWave("SE/enter.wav");
 }
 
 void TitleScene::Update() {
@@ -45,6 +55,7 @@ void TitleScene::Update() {
 	switch (phase_) {
 	case Phase::kFadeIn:
 		fade_->Update();
+		PlayBgm();
 
 		if (fade_->IsFinished()) {
 			phase_ = Phase::kMain;
@@ -53,6 +64,7 @@ void TitleScene::Update() {
 	case Phase::kMain:
 		if (Input::GetInstance()->PushKey(DIK_SPACE)) {
 			fade_->Start(Fade::Status::FadeOut, 1.0f);
+			PlaySe();
 			phase_ = Phase::kFadeOut;
 		}
 		break;
@@ -95,4 +107,18 @@ void TitleScene::Draw() {
 	Model::PostDraw();
 
 	fade_->Draw();
+}
+
+void TitleScene::PlayBgm(){
+	if(!isPlayBgm_){
+		bgmHandle_ = Audio::GetInstance()->PlayWave(bgmDataHandle_,true,0.2f);
+		isPlayBgm_ = true;
+	}
+}
+
+void TitleScene::PlaySe(){
+	if(!isPlaySe_){
+		seHandle_ = Audio::GetInstance()->PlayWave(seDataHandle_,false,0.3f);
+		isPlaySe_ = true;
+	}
 }

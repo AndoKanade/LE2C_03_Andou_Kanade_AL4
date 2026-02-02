@@ -42,6 +42,11 @@ void Player::Initialize(Model* model,Model* modelAttack,Camera* camera,const Vec
 	// ★追加: 状態のリセット
 	isInhaling_ = false;
 	hasAmmo_ = false;
+
+	seDataHandle_ = Audio::GetInstance()->LoadWave("SE/se_jump3.wav");
+	seBeamDataHandle_ = Audio::GetInstance()->LoadWave("SE/beam.wav");
+	seHoldingDataHandle_ = Audio::GetInstance()->LoadWave("SE/holding.wav");
+	seChargeDataHandle_ = Audio::GetInstance()->LoadWave("SE/charge.wav");
 }
 
 // =================================================================
@@ -152,13 +157,23 @@ void Player::BehaviorRootUpdate(){
 		if(Input::GetInstance()->PushKey(DIK_SPACE)){
 			// スペースキーを押している間、吸い込み状態にする
 			isInhaling_ = true;
+			if(Audio::GetInstance()->IsPlaying(seHoldingVoiceHandle_) == false){
+				// 第2引数を true (ループ再生) にするのがコツ！
+				seHoldingVoiceHandle_ = Audio::GetInstance()->PlayWave(seHoldingDataHandle_,true,0.3f);
+			}
 		} else{
 			isInhaling_ = false;
+			if(Audio::GetInstance()->IsPlaying(seHoldingVoiceHandle_)){
+				Audio::GetInstance()->StopWave(seHoldingVoiceHandle_);
+			}
 		}
 	}
 	// すでに弾を持っている場合 -> 「吐き出し」が可能
 	else{
 		isInhaling_ = false; // 満腹なので吸い込めない
+		if(Audio::GetInstance()->IsPlaying(seHoldingVoiceHandle_)){
+			Audio::GetInstance()->StopWave(seHoldingVoiceHandle_);
+		}
 
 		// スペースキーで発射！
 		if(Input::GetInstance()->TriggerKey(DIK_SPACE)){
@@ -250,6 +265,7 @@ void Player::BehaviorShotInitialize(){
 
 	// GameScene側で検知して弾を生成するフラグON
 	isShotBeamRequest_ = true;
+	Audio::GetInstance()->PlayWave(seBeamDataHandle_,false,0.3f);
 }
 
 void Player::BehaviorShotUpdate(){
@@ -299,6 +315,9 @@ AABB Player::GetInhaleArea(){
 // 入力と物理挙動 (InputMove) - 変更なし
 // =================================================================
 void Player::InputMove(){
+	if(isDead_){
+		return;
+	}
 
 	if(onGround_){
 		isHovering_ = false;
@@ -334,6 +353,7 @@ void Player::InputMove(){
 		}
 
 		if(Input::GetInstance()->PushKey(DIK_UP)){
+			PlaySe();
 			velocity_ += Vector3(0,kJumpAcceleration / 60.0f,0);
 
 			JumpSystem* jumpSys = ParticleManager::GetInstance()->GetJumpSystem();
@@ -347,6 +367,8 @@ void Player::InputMove(){
 		isHovering_ = true;
 
 		if(Input::GetInstance()->TriggerKey(DIK_UP)){
+			isPlaySe_ = false; // 「鳴らしてよし！」の状態に強制リセット
+			PlaySe();          // 音を鳴らす
 			velocity_.y += kHoverImpulse;
 			velocity_.y = std::min(velocity_.y,kLimitHoverImpulseSpeed);
 		} else{
@@ -397,6 +419,9 @@ void Player::OnCollision(const Enemy* enemy){
 
 	 isDead_ = true;
 	isCollisionDisabled_ = true;
+	if(Audio::GetInstance()->IsPlaying(seHoldingVoiceHandle_)){
+		Audio::GetInstance()->StopWave(seHoldingVoiceHandle_);
+	}
 }
 
 // --- 以下、マップチップ判定処理（変更なし） ---
@@ -589,6 +614,7 @@ void Player::UpdateOnGround(const CollisionMapInfo& info){
 			onGround_ = true;
 			velocity_.x *= (1.0f - kAttenuationLanding);
 			velocity_.y = 0.0f;
+			isPlaySe_ = false;
 		}
 	}
 }
@@ -597,4 +623,27 @@ void Player::UpdateOnWall(const CollisionMapInfo& info){
 	if(info.hitWall){
 		velocity_.x *= (1.0f - kAttenuationWall);
 	}
+}
+
+
+void Player::PlaySe(){
+	if(!isPlaySe_){
+		seHandle_ = Audio::GetInstance()->PlayWave(seDataHandle_,false,0.3f);
+		isPlaySe_ = true;
+	}
+}
+
+void Player::CatchAmmo(){
+
+	// 弾獲得フラグをON
+	hasAmmo_ = true;
+
+	// ★追加1: 吸い込み中のループ音を即座に止める
+	// (これをしないと、チャージ音と重なってうるさくなる場合があります)
+	if(Audio::GetInstance()->IsPlaying(seHoldingVoiceHandle_)){
+		Audio::GetInstance()->StopWave(seHoldingVoiceHandle_);
+	}
+
+	// ★追加2: チャージ完了SEを鳴らす！ ("キィン！" みたいな音)
+	Audio::GetInstance()->PlayWave(seChargeDataHandle_,false,0.3f);
 }

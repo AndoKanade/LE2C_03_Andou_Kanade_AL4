@@ -36,6 +36,8 @@ public:
 
 	// エフェクト生成ヘルパー
 	void CreateEffect(const Vector3& position);
+
+	void PlayBgm();
 private:
 	// --- 内部メソッド ---
 
@@ -115,4 +117,8 @@ private:
 	uint32_t voiceHandle_ = 0;
 
 	bool isClear_ = false;
+
+	uint32_t bgmDataHandle_;
+	uint32_t bgmHandle_;
+	bool isPlayBgm_ = false;
 };
