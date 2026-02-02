@@ -92,10 +92,12 @@ public:
 	bool HasAmmo() const{ return hasAmmo_; }
 
 	// 弾を飲み込んだときに呼ぶ関数
-	void CatchAmmo(){ hasAmmo_ = true; }
+	void CatchAmmo();
 
 	// 吸い込み判定エリア（口元の判定）を取得
 	AABB GetInhaleArea();
+
+	void PlaySe();
 
 
 private:
@@ -180,6 +182,16 @@ private:
 	bool isShotBeamRequest_ = false;
 	uint32_t shotTimer_ = 0;
 
+	uint32_t seDataHandle_;
+	uint32_t seHandle_;
+	bool isPlaySe_ = false;
+
+	uint32_t seBeamDataHandle_ = 0;
+
+	uint32_t seHoldingDataHandle_ = 0;  // 吸い込みSEのデータ
+	uint32_t seHoldingVoiceHandle_ = 0; // 再生中の音を管理する変数（止めるのに必要）
+
+	uint32_t seChargeDataHandle_ = 0;
 	// =========================================================
 	// 定数 (調整用パラメータ)
 	// =========================================================

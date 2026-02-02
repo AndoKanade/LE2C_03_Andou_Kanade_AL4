@@ -67,6 +67,14 @@ GameScene::~GameScene(){
 		delete beam;
 	}
 	beams_.clear();
+
+	Audio* audio = Audio::GetInstance();
+	if(audio != nullptr){ // ヌルチェックを追加
+		if(audio->IsPlaying(bgmHandle_)){
+			audio->StopWave(bgmHandle_);
+		}
+	}
+
 }
 
 // --- 初期化処理 ---
@@ -142,6 +150,11 @@ void GameScene::Initialize(){
 	// ParticleManager::GetInstance()->Initialize(); // mainで呼んでいれば不要
 	ParticleManager::GetInstance()->GetBossEffectSystem()->Initialize(modelParticle_);
 	ParticleManager::GetInstance()->GetWallHitEffectSystem()->Initialize(modelParticle_);
+
+	// BGM読み込み・再生フラグ初期化
+	bgmDataHandle_ = Audio::GetInstance()->LoadWave("BGM/gameScene.wav");
+	isPlayBgm_ = false;
+
 }
 
 // --- フェーズ遷移管理 ---
@@ -211,6 +224,7 @@ void GameScene::Update(){
 	// --- フェーズごとの更新 ---
 	switch(phase_){
 	case Phase::kFadeIn:
+		PlayBgm();
 		fade_->Update();
 		if(fade_->IsFinished()){
 			fade_->Start(Fade::Status::FadeOut,1.0f);
@@ -591,5 +605,12 @@ void GameScene::GenerateEnemies(){
 				enemies_.push_back(newEnemy);
 			}
 		}
+	}
+}
+
+void GameScene::PlayBgm(){
+	if(!isPlayBgm_){
+		bgmHandle_ = Audio::GetInstance()->PlayWave(bgmDataHandle_,true,0.2f);
+		isPlayBgm_ = true;
 	}
 }
