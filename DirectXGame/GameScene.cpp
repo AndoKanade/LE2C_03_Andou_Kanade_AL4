@@ -255,8 +255,8 @@ void GameScene::Update(){
 			}
 			// ボスがいなければクリアへ
 			if(!isBossAlive){
-			phase_ = Phase::kFadeOut;
-			fade_->Start(Fade::Status::FadeOut, 1.0f);
+				phase_ = Phase::kFadeOut;
+				fade_->Start(Fade::Status::FadeOut,1.0f);
 			}
 		}
 

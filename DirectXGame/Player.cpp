@@ -417,7 +417,7 @@ void Player::OnCollision(const Enemy* enemy){
 		}
 	}
 
-	 isDead_ = true;
+	isDead_ = true;
 	isCollisionDisabled_ = true;
 	if(Audio::GetInstance()->IsPlaying(seHoldingVoiceHandle_)){
 		Audio::GetInstance()->StopWave(seHoldingVoiceHandle_);
